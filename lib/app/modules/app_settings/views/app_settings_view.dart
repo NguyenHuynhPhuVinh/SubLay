@@ -38,7 +38,7 @@ class AppSettingsView extends GetView<AppSettingsController> {
               children: [
                 Icon(
                   Iconsax.mobile,
-                  color: Theme.of(Get.context!).primaryColor,
+                  color: Colors.blue,
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -99,12 +99,12 @@ class AppSettingsView extends GetView<AppSettingsController> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? Theme.of(Get.context!).primaryColor
+                ? Colors.blue
                 : Colors.grey.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
-              ? Theme.of(Get.context!).primaryColor.withOpacity(0.1)
+              ? Colors.blue.withOpacity(0.1)
               : Colors.transparent,
         ),
         child: Row(
@@ -112,7 +112,7 @@ class AppSettingsView extends GetView<AppSettingsController> {
             Icon(
               icon,
               color: isSelected
-                  ? Theme.of(Get.context!).primaryColor
+                  ? Colors.blue
                   : Colors.grey,
             ),
             const SizedBox(width: 12),
@@ -126,7 +126,7 @@ class AppSettingsView extends GetView<AppSettingsController> {
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: isSelected
-                          ? Theme.of(Get.context!).primaryColor
+                          ? Colors.blue
                           : null,
                     ),
                   ),
@@ -143,7 +143,7 @@ class AppSettingsView extends GetView<AppSettingsController> {
             if (isSelected)
               Icon(
                 Iconsax.tick_circle,
-                color: Theme.of(Get.context!).primaryColor,
+                color: Colors.blue,
               ),
           ],
         ),
