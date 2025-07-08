@@ -10,6 +10,7 @@ import '../../video_input/views/video_input_view.dart';
 import '../../video_player/views/video_player_view.dart';
 import '../../subtitle_editor/views/subtitle_editor_view.dart';
 import '../../recent_videos/views/recent_videos_view.dart';
+import '../../prompt_manager/views/prompt_manager_view.dart';
 import '../../app_settings/views/app_settings_view.dart';
 
 class MainScreenView extends GetView<MainScreenController> {
@@ -24,7 +25,8 @@ class MainScreenView extends GetView<MainScreenController> {
           VideoInputView(),        // Tab 0
           SubtitleEditorView(),    // Tab 1
           RecentVideosView(),      // Tab 2
-          AppSettingsView(),       // Tab 3
+          PromptManagerView(),     // Tab 3
+          AppSettingsView(),       // Tab 4
         ],
       )),
       bottomNavigationBar: _buildResponsiveNavBar(),
@@ -67,7 +69,8 @@ class MainScreenView extends GetView<MainScreenController> {
               _buildNavItem(0, Iconsax.video, 'Input', true),
               _buildNavItem(1, Iconsax.edit, 'Editor', true),
               _buildNavItem(2, Iconsax.clock, 'Recent', true),
-              _buildNavItem(3, Iconsax.setting_2, 'Settings', true),
+              _buildNavItem(3, Iconsax.message_text, 'Prompts', true),
+              _buildNavItem(4, Iconsax.setting_2, 'Settings', true),
             ],
           )),
         ),
@@ -119,6 +122,11 @@ class MainScreenView extends GetView<MainScreenController> {
               GButton(
                 icon: Iconsax.clock,
                 text: 'Recent',
+                textStyle: TextStyle(fontSize: 12.sp),
+              ),
+              GButton(
+                icon: Iconsax.message_text,
+                text: 'Prompts',
                 textStyle: TextStyle(fontSize: 12.sp),
               ),
               GButton(
