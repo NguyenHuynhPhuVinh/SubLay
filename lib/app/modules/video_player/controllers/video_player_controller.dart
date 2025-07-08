@@ -20,7 +20,7 @@ class VideoPlayerController extends GetxController {
 
   // Observable variables
   final isPlayerReady = false.obs;
-  final isFullScreen = true.obs; // Start in fullscreen mode
+  final isFullScreen = false.obs; // Will be set based on user settings
   final currentPosition = Duration.zero.obs;
   final totalDuration = Duration.zero.obs;
   final isPlaying = false.obs;
@@ -41,8 +41,8 @@ class VideoPlayerController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // Set orientation based on user settings
-    _setOrientationFromSettings();
+    // Set fullscreen mode and orientation based on user settings
+    _setFullScreenModeFromSettings();
 
     // Hide system UI for fullscreen mode
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
@@ -230,13 +230,17 @@ class VideoPlayerController extends GetxController {
 
 
 
-  void _setOrientationFromSettings() {
+  void _setFullScreenModeFromSettings() {
     if (_settingsService.isLandscapeMode) {
+      // Landscape mode = fullscreen player
+      isFullScreen.value = true;
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeLeft,
         DeviceOrientation.landscapeRight,
       ]);
     } else {
+      // Portrait mode = normal player
+      isFullScreen.value = false;
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
@@ -308,8 +312,8 @@ class VideoPlayerController extends GetxController {
       _parseSrtContent();
       _createVideoModel();
 
-      // Set orientation based on user settings
-      _setOrientationFromSettings();
+      // Set fullscreen mode and orientation based on user settings
+      _setFullScreenModeFromSettings();
       update(); // Trigger GetBuilder rebuild
     }
   }
