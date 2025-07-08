@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/utils/srt_parser.dart';
 import '../../../data/services/video_history_service.dart';
+import '../../../data/services/app_settings_service.dart';
 import '../../../data/models/video_with_subtitle.dart';
 
 class VideoPlayerController extends GetxController {
   // Services
   final VideoHistoryService _historyService = Get.find<VideoHistoryService>();
+  final AppSettingsService _settingsService = Get.find<AppSettingsService>();
 
   // YouTube Player Controller
   YoutubePlayerController? youtubeController;
@@ -18,7 +20,7 @@ class VideoPlayerController extends GetxController {
 
   // Observable variables
   final isPlayerReady = false.obs;
-  final isFullScreen = false.obs; // Start in normal mode
+  final isFullScreen = true.obs; // Start in fullscreen mode
   final currentPosition = Duration.zero.obs;
   final totalDuration = Duration.zero.obs;
   final isPlaying = false.obs;
@@ -39,14 +41,11 @@ class VideoPlayerController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // Start in portrait mode (normal mode)
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    // Set orientation based on user settings
+    _setOrientationFromSettings();
 
-    // Show system UI in normal mode
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    // Hide system UI for fullscreen mode
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
 
     // Get arguments from navigation
     final args = Get.arguments as Map<String, dynamic>?;
@@ -87,7 +86,7 @@ class VideoPlayerController extends GetxController {
           enableJavaScript: true,
           loop: false,
           playsInline: true,
-          showControls: false,
+          showControls: true,
           showFullscreenButton: false,
           strictRelatedVideos: false,
         ),
@@ -229,51 +228,23 @@ class VideoPlayerController extends GetxController {
   Duration get videoPosition => currentPosition.value;
   Duration get videoDuration => totalDuration.value;
 
-  void toggleFullScreen() {
-    if (isFullScreen.value) {
-      _exitFullscreen();
+
+
+  void _setOrientationFromSettings() {
+    if (_settingsService.isLandscapeMode) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
     } else {
-      _enterFullscreen();
-    }
-    update(); // Trigger rebuild
-  }
-
-  // Chỉ thoát fullscreen, không về Input
-  void exitFullscreenOnly() {
-    print('exitFullscreenOnly called');
-    if (isFullScreen.value) {
-      isFullScreen.value = false;
-      _exitFullscreen();
-      update();
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
     }
   }
 
-  void _enterFullscreen() {
-    isFullScreen.value = true;
-    // Set landscape orientation
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    // Hide system UI - try different approach
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-    // Start controls timer for fullscreen
-    _startControlsTimer();
-  }
 
-  void _exitFullscreen() {
-    isFullScreen.value = false;
-    // Restore portrait orientation
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-    // Show system UI
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    // Stop controls timer when exit fullscreen
-    _controlsTimer?.cancel();
-    showControls.value = true; // Always show controls in normal mode
-  }
 
   void toggleControls() {
     showControls.value = !showControls.value;
@@ -337,9 +308,8 @@ class VideoPlayerController extends GetxController {
       _parseSrtContent();
       _createVideoModel();
 
-      // Start in normal mode - no auto fullscreen
-      // _startControlsTimer(); // No need for controls timer in normal mode
-      // _startAutoSave(); // Disable auto-save for now to prevent crash
+      // Set orientation based on user settings
+      _setOrientationFromSettings();
       update(); // Trigger GetBuilder rebuild
     }
   }
@@ -362,8 +332,12 @@ class VideoPlayerController extends GetxController {
     print('VideoPlayerController.goBack() called');
     print('Current route: ${Get.currentRoute}');
 
-    // Always restore orientation and go back to previous screen
-    _exitFullscreen();
+    // Restore portrait orientation when going back
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     // Clear video data
     youtubeController?.pauseVideo();
@@ -387,7 +361,12 @@ class VideoPlayerController extends GetxController {
   @override
   void onClose() {
     print('VideoPlayerController.onClose() called');
-    _exitFullscreen(); // Restore orientation when controller is disposed
+    // Restore portrait orientation when controller is disposed
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _positionTimer?.cancel();
     _controlsTimer?.cancel();
     youtubeController?.close();
