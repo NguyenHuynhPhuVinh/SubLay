@@ -102,6 +102,8 @@ class PromptManagerController extends GetxController {
           updatedAt: now,
         );
         await _promptService.updatePrompt(updatedPrompt);
+        clearForm();
+        Get.back(); // Close dialog/bottom sheet
         Get.snackbar(
           'Thành công',
           'Đã cập nhật prompt',
@@ -121,6 +123,8 @@ class PromptManagerController extends GetxController {
           updatedAt: now,
         );
         await _promptService.addPrompt(newPrompt);
+        clearForm();
+        Get.back(); // Close dialog/bottom sheet
         Get.snackbar(
           'Thành công',
           'Đã thêm prompt mới',
@@ -129,9 +133,6 @@ class PromptManagerController extends GetxController {
           colorText: Colors.white,
         );
       }
-      
-      clearForm();
-      Get.back(); // Close dialog/bottom sheet
     } catch (e) {
       Get.snackbar(
         'Lỗi',
@@ -186,26 +187,7 @@ class PromptManagerController extends GetxController {
     }
   }
 
-  Future<void> duplicatePrompt(PromptModel prompt) async {
-    try {
-      await _promptService.duplicatePrompt(prompt.id);
-      Get.snackbar(
-        'Thành công',
-        'Đã sao chép prompt',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-    } catch (e) {
-      Get.snackbar(
-        'Lỗi',
-        'Không thể sao chép prompt: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
-  }
+
 
   Future<void> copyPromptToClipboard(PromptModel prompt) async {
     try {

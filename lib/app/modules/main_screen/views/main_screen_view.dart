@@ -19,16 +19,18 @@ class MainScreenView extends GetView<MainScreenController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Obx(() => IndexedStack(
-        index: controller.currentIndex.value,
-        children: const [
-          VideoInputView(),        // Tab 0
-          SubtitleEditorView(),    // Tab 1
-          RecentVideosView(),      // Tab 2
-          PromptManagerView(),     // Tab 3
-          AppSettingsView(),       // Tab 4
-        ],
-      )),
+      body: Obx(
+        () => IndexedStack(
+          index: controller.currentIndex.value,
+          children: const [
+            VideoInputView(), // Tab 0
+            SubtitleEditorView(), // Tab 1
+            RecentVideosView(), // Tab 2
+            PromptManagerView(), // Tab 3
+            AppSettingsView(), // Tab 4
+          ],
+        ),
+      ),
       bottomNavigationBar: _buildResponsiveNavBar(),
     );
   }
@@ -56,23 +58,25 @@ class MainScreenView extends GetView<MainScreenController> {
             color: isDark
                 ? Colors.white.withOpacity(0.1)
                 : Colors.black.withOpacity(0.1),
-          )
+          ),
         ],
       ),
       child: SafeArea(
         child: Container(
           height: 60.h,
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-          child: Obx(() => Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildNavItem(0, Iconsax.video, 'Input', true),
-              _buildNavItem(1, Iconsax.edit, 'Editor', true),
-              _buildNavItem(2, Iconsax.clock, 'Recent', true),
-              _buildNavItem(3, Iconsax.message_text, 'Prompts', true),
-              _buildNavItem(4, Iconsax.setting_2, 'Settings', true),
-            ],
-          )),
+          child: Obx(
+            () => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildNavItem(0, Iconsax.video, 'Input', true),
+                _buildNavItem(1, Iconsax.edit, 'Editor', true),
+                _buildNavItem(2, Iconsax.clock, 'Recent', true),
+                _buildNavItem(3, Iconsax.message_text, 'AI', true),
+                _buildNavItem(4, Iconsax.setting_2, 'Settings', true),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -89,7 +93,7 @@ class MainScreenView extends GetView<MainScreenController> {
             color: isDark
                 ? Colors.white.withOpacity(0.1)
                 : Colors.black.withOpacity(0.1),
-          )
+          ),
         ],
       ),
       child: SafeArea(
@@ -106,35 +110,37 @@ class MainScreenView extends GetView<MainScreenController> {
               iconSize: 24.r,
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: isDark ? Colors.grey[800]! : Colors.grey[100]!,
+              tabBackgroundColor: isDark
+                  ? Colors.grey[800]!
+                  : Colors.grey[100]!,
               color: Theme.of(Get.context!).colorScheme.onSurface,
-            tabs: [
-              GButton(
-                icon: Iconsax.video,
-                text: 'Video Input',
-                textStyle: TextStyle(fontSize: 12.sp),
-              ),
-              GButton(
-                icon: Iconsax.edit,
-                text: 'Editor',
-                textStyle: TextStyle(fontSize: 12.sp),
-              ),
-              GButton(
-                icon: Iconsax.clock,
-                text: 'Recent',
-                textStyle: TextStyle(fontSize: 12.sp),
-              ),
-              GButton(
-                icon: Iconsax.message_text,
-                text: 'Prompts',
-                textStyle: TextStyle(fontSize: 12.sp),
-              ),
-              GButton(
-                icon: Iconsax.setting_2,
-                text: 'Settings',
-                textStyle: TextStyle(fontSize: 12.sp),
-              ),
-            ],
+              tabs: [
+                GButton(
+                  icon: Iconsax.video,
+                  text: 'Video Input',
+                  textStyle: TextStyle(fontSize: 12.sp),
+                ),
+                GButton(
+                  icon: Iconsax.edit,
+                  text: 'Editor',
+                  textStyle: TextStyle(fontSize: 12.sp),
+                ),
+                GButton(
+                  icon: Iconsax.clock,
+                  text: 'Recent',
+                  textStyle: TextStyle(fontSize: 12.sp),
+                ),
+                GButton(
+                  icon: Iconsax.message_text,
+                  text: 'AI Prompts',
+                  textStyle: TextStyle(fontSize: 12.sp),
+                ),
+                GButton(
+                  icon: Iconsax.setting_2,
+                  text: 'Settings',
+                  textStyle: TextStyle(fontSize: 12.sp),
+                ),
+              ],
               selectedIndex: controller.currentIndex.value,
               onTabChange: (index) {
                 controller.changeTabIndex(index);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/prompt_manager_controller.dart';
 import '../../../data/models/prompt_model.dart';
@@ -18,6 +19,11 @@ class PromptManagerView extends GetView<PromptManagerController> {
         title: const Text('Quản lý Prompt AI'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Iconsax.global),
+            tooltip: 'Mở Google AI Studio',
+            onPressed: () => _openAIStudio(),
+          ),
           IconButton(
             icon: const Icon(Iconsax.add),
             onPressed: () => _showPromptForm(context),
@@ -131,11 +137,36 @@ class PromptManagerView extends GetView<PromptManagerController> {
           onTap: () => _showPromptDetail(context, prompt),
           onEdit: () => _showPromptForm(context, prompt: prompt),
           onDelete: () => controller.deletePrompt(prompt),
-          onDuplicate: () => controller.duplicatePrompt(prompt),
           onCopy: () => controller.copyPromptToClipboard(prompt),
         );
       },
     );
+  }
+
+  void _openAIStudio() async {
+    const url = 'https://aistudio.google.com/';
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          'Không thể mở trình duyệt',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Lỗi',
+        'Không thể mở link: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   void _showPromptForm(BuildContext context, {PromptModel? prompt}) {
@@ -222,33 +253,34 @@ class PromptManagerView extends GetView<PromptManagerController> {
               // Actions
               Container(
                 padding: EdgeInsets.all(16.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Column(
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        controller.copyPromptToClipboard(prompt);
-                        Get.back();
-                      },
-                      icon: const Icon(Iconsax.copy),
-                      label: const Text('Copy'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              controller.copyPromptToClipboard(prompt);
+                              Get.back();
+                            },
+                            icon: const Icon(Iconsax.copy),
+                            label: const Text('Copy'),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Get.back();
+                              _showPromptForm(context, prompt: prompt);
+                            },
+                            icon: const Icon(Iconsax.edit),
+                            label: const Text('Sửa'),
+                          ),
+                        ),
+                      ],
                     ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Get.back();
-                        _showPromptForm(context, prompt: prompt);
-                      },
-                      icon: const Icon(Iconsax.edit),
-                      label: const Text('Sửa'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Get.back();
-                        controller.duplicatePrompt(prompt);
-                      },
-                      icon: const Icon(Iconsax.copy),
-                      label: const Text('Nhân bản'),
-                    ),
+
                   ],
                 ),
               ),

@@ -10,7 +10,6 @@ class PromptCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-  final VoidCallback? onDuplicate;
   final VoidCallback? onCopy;
 
   const PromptCard({
@@ -19,7 +18,6 @@ class PromptCard extends StatelessWidget {
     this.onTap,
     this.onEdit,
     this.onDelete,
-    this.onDuplicate,
     this.onCopy,
   }) : super(key: key);
 
@@ -132,9 +130,6 @@ class PromptCard extends StatelessWidget {
                         case 'edit':
                           onEdit?.call();
                           break;
-                        case 'duplicate':
-                          onDuplicate?.call();
-                          break;
                         case 'delete':
                           if (!prompt.isDefault) {
                             onDelete?.call();
@@ -160,16 +155,6 @@ class PromptCard extends StatelessWidget {
                             Icon(Iconsax.edit),
                             SizedBox(width: 8),
                             Text('Sửa'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'duplicate',
-                        child: Row(
-                          children: [
-                            Icon(Iconsax.copy),
-                            SizedBox(width: 8),
-                            Text('Nhân bản'),
                           ],
                         ),
                       ),
@@ -231,23 +216,35 @@ class PromptCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: OutlinedButton(
                       onPressed: onCopy,
-                      icon: Icon(Iconsax.copy, size: 16.r),
-                      label: const Text('Copy'),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 8.h),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Iconsax.copy, size: 14.r),
+                          SizedBox(width: 4.w),
+                          const Text('Copy'),
+                        ],
                       ),
                     ),
                   ),
                   SizedBox(width: 8.w),
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: OutlinedButton(
                       onPressed: onEdit,
-                      icon: Icon(Iconsax.edit, size: 16.r),
-                      label: const Text('Sửa'),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 8.h),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Iconsax.edit, size: 14.r),
+                          SizedBox(width: 4.w),
+                          const Text('Sửa'),
+                        ],
                       ),
                     ),
                   ),
