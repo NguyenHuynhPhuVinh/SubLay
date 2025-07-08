@@ -99,7 +99,9 @@ class VideoPlayerController extends GetxController {
 
   void _startPositionTimer() {
     _positionTimer?.cancel();
-    _positionTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+    _positionTimer = Timer.periodic(const Duration(milliseconds: 500), (
+      timer,
+    ) async {
       if (youtubeController != null) {
         try {
           final position = await youtubeController!.currentTime;
@@ -122,36 +124,8 @@ class VideoPlayerController extends GetxController {
 
   void _parseSrtContent() {
     if (srtContent.value.isNotEmpty) {
-      try {
-        // Parse SRT content using custom parser
-        subtitles = SrtParser.parse(srtContent.value);
-
-        if (subtitles.isNotEmpty) {
-          Get.snackbar(
-            'Thành công',
-            'Đã tải ${subtitles.length} phụ đề',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green.withOpacity(0.8),
-            colorText: Colors.white,
-          );
-        } else {
-          Get.snackbar(
-            'Cảnh báo',
-            'Không tìm thấy phụ đề hợp lệ trong file SRT',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.orange.withOpacity(0.8),
-            colorText: Colors.white,
-          );
-        }
-      } catch (e) {
-        Get.snackbar(
-          'Lỗi',
-          'Không thể phân tích file SRT: $e',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.8),
-          colorText: Colors.white,
-        );
-      }
+      // Parse SRT content using custom parser
+      subtitles = SrtParser.parse(srtContent.value);
     }
   }
 
@@ -177,7 +151,9 @@ class VideoPlayerController extends GetxController {
           final rewindPosition = Duration(seconds: rewindSeconds);
 
           if (rewindPosition != currentPosition.value) {
-            await youtubeController!.seekTo(seconds: rewindPosition.inSeconds.toDouble());
+            await youtubeController!.seekTo(
+              seconds: rewindPosition.inSeconds.toDouble(),
+            );
             print(
               'Rewound 5s before play: ${rewindPosition.inSeconds}s (from ${currentSeconds}s)',
             );
@@ -213,9 +189,14 @@ class VideoPlayerController extends GetxController {
       try {
         final newPosition = currentPosition.value + Duration(seconds: seconds);
         final clampedPosition = Duration(
-          seconds: newPosition.inSeconds.clamp(0, totalDuration.value.inSeconds),
+          seconds: newPosition.inSeconds.clamp(
+            0,
+            totalDuration.value.inSeconds,
+          ),
         );
-        await youtubeController!.seekTo(seconds: clampedPosition.inSeconds.toDouble());
+        await youtubeController!.seekTo(
+          seconds: clampedPosition.inSeconds.toDouble(),
+        );
         // Reset controls timer when user interacts
         _resetControlsTimer();
       } catch (e) {
@@ -227,8 +208,6 @@ class VideoPlayerController extends GetxController {
   // Getters for compatibility with view
   Duration get videoPosition => currentPosition.value;
   Duration get videoDuration => totalDuration.value;
-
-
 
   void _setFullScreenModeFromSettings() {
     if (_settingsService.isLandscapeMode) {
@@ -247,8 +226,6 @@ class VideoPlayerController extends GetxController {
       ]);
     }
   }
-
-
 
   void toggleControls() {
     showControls.value = !showControls.value;
