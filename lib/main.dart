@@ -4,6 +4,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'app/routes/app_pages.dart';
+import 'app/data/models/video_with_subtitle.dart';
+import 'app/data/services/video_history_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,11 +13,17 @@ void main() async {
   // Initialize Hive
   await Hive.initFlutter();
 
-  runApp(const LinkStoryApp());
+  // Register Hive adapters
+  Hive.registerAdapter(VideoWithSubtitleAdapter());
+
+  // Initialize services
+  Get.put(VideoHistoryService(), permanent: true);
+
+  runApp(const DuTupSRTApp());
 }
 
-class LinkStoryApp extends StatelessWidget {
-  const LinkStoryApp({super.key});
+class DuTupSRTApp extends StatelessWidget {
+  const DuTupSRTApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +33,7 @@ class LinkStoryApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return GetMaterialApp(
-          title: 'LinkStory',
+          title: 'DuTupSRT',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.blue,

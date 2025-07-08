@@ -3,20 +3,20 @@ part of 'app_pages.dart';
 
 abstract class Routes {
   Routes._();
-  static const HOME = _Paths.HOME;
-  static const LIBRARY = _Paths.LIBRARY;
-  static const READER = _Paths.READER;
-  static const HISTORY = _Paths.HISTORY;
-  static const SETTINGS = _Paths.SETTINGS;
-  static const AI = _Paths.AI;
+  static const MAIN_SCREEN = _Paths.MAIN_SCREEN;
+  static const VIDEO_INPUT = _Paths.VIDEO_INPUT;
+  static const VIDEO_PLAYER = _Paths.VIDEO_PLAYER;
+  static const SUBTITLE_EDITOR = _Paths.SUBTITLE_EDITOR;
+  static const RECENT_VIDEOS = _Paths.RECENT_VIDEOS;
+  static const APP_SETTINGS = _Paths.APP_SETTINGS;
 }
 
 abstract class _Paths {
   _Paths._();
-  static const HOME = '/home';
-  static const LIBRARY = '/library';
-  static const READER = '/reader';
-  static const HISTORY = '/history';
-  static const SETTINGS = '/settings';
-  static const AI = '/ai';
+  static const MAIN_SCREEN = '/main_screen';
+  static const VIDEO_INPUT = '/video_input';
+  static const VIDEO_PLAYER = '/video_player';
+  static const SUBTITLE_EDITOR = '/subtitle_editor';
+  static const RECENT_VIDEOS = '/recent_videos';
+  static const APP_SETTINGS = '/app_settings';
 }
