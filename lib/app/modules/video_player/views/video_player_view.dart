@@ -170,44 +170,41 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
         bottom: bottomPosition,
         left: 40,
         right: 40,
-        child: Text(
-          subtitle,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            height: 1.3,
-            shadows: [
-              // Multiple shadows để tạo outline mạnh như trong ảnh
-              Shadow(
-                offset: Offset(-1.5, -1.5),
-                blurRadius: 0,
-                color: Colors.black,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outline đen mượt mà
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+                letterSpacing: 0.5,
+                foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 2
+                  ..color = Colors.black,
               ),
-              Shadow(
-                offset: Offset(1.5, -1.5),
-                blurRadius: 0,
-                color: Colors.black,
+              textAlign: TextAlign.center,
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
+            ),
+            // Chữ trắng bên trên
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: Color(0xFFFFFFF0),
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+                letterSpacing: 0.5,
               ),
-              Shadow(
-                offset: Offset(1.5, 1.5),
-                blurRadius: 0,
-                color: Colors.black,
-              ),
-              Shadow(
-                offset: Offset(-1.5, 1.5),
-                blurRadius: 0,
-                color: Colors.black,
-              ),
-              Shadow(offset: Offset(-2, 0), blurRadius: 0, color: Colors.black),
-              Shadow(offset: Offset(2, 0), blurRadius: 0, color: Colors.black),
-              Shadow(offset: Offset(0, -2), blurRadius: 0, color: Colors.black),
-              Shadow(offset: Offset(0, 2), blurRadius: 0, color: Colors.black),
-            ],
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 5,
-          overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       );
     });
