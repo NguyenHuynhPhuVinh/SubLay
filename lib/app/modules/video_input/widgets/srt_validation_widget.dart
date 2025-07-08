@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../../core/utils/srt_parser.dart';
@@ -16,8 +15,8 @@ class SrtValidationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (validationResult.isValid && 
-        validationResult.formatFixesCount == 0 && 
+    if (validationResult.isValid &&
+        validationResult.formatFixesCount == 0 &&
         validationResult.silenceGaps.isEmpty) {
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
@@ -89,7 +88,12 @@ class SrtValidationWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, Color color, IconData icon, String count) {
+  Widget _buildSectionHeader(
+    String title,
+    Color color,
+    IconData icon,
+    String count,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -142,47 +146,57 @@ class SrtValidationWidget extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: errors.take(5).map((error) => Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 6),
-                width: 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.6),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  error,
-                  style: TextStyle(
-                    color: color.withOpacity(0.8),
-                    fontSize: 12,
-                    height: 1.3,
+        children:
+            errors
+                .take(5)
+                .map(
+                  (error) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 6),
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.6),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            error,
+                            style: TextStyle(
+                              color: color.withOpacity(0.8),
+                              fontSize: 12,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                )
+                .toList()
+              ..addAll(
+                errors.length > 5
+                    ? [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '... và ${errors.length - 5} lỗi khác',
+                            style: TextStyle(
+                              color: color.withOpacity(0.6),
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ]
+                    : [],
               ),
-            ],
-          ),
-        )).toList()
-          ..addAll(errors.length > 5 ? [
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '... và ${errors.length - 5} lỗi khác',
-                style: TextStyle(
-                  color: color.withOpacity(0.6),
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ] : []),
       ),
     );
   }
@@ -199,9 +213,7 @@ class SrtValidationWidget extends StatelessWidget {
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
       ),
     );

@@ -3,8 +3,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import '../../../core/utils/srt_parser.dart';
-import '../../main_screen/controllers/main_screen_controller.dart';
-import '../../video_player/controllers/video_player_controller.dart';
 
 class VideoInputController extends GetxController {
   // Observable variables
@@ -13,50 +11,50 @@ class VideoInputController extends GetxController {
   final srtFileName = ''.obs;
   final isLoading = false.obs;
   final isValidUrl = false.obs;
-  
+
   // Text controllers
   final urlController = TextEditingController();
   final srtTextController = TextEditingController();
-  
+
   // Validate YouTube URL
   void validateYouTubeUrl(String url) {
     youtubeUrl.value = url;
-    
+
     // Basic YouTube URL validation
     final youtubeRegex = RegExp(
       r'^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+',
       caseSensitive: false,
     );
-    
+
     isValidUrl.value = youtubeRegex.hasMatch(url) && url.isNotEmpty;
   }
-  
+
   // Extract YouTube video ID from URL
   String? extractVideoId(String url) {
     final regExp = RegExp(
       r'(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})',
       caseSensitive: false,
     );
-    
+
     final match = regExp.firstMatch(url);
     return match?.group(1);
   }
-  
+
   // Pick SRT file
   Future<void> pickSrtFile() async {
     try {
       isLoading.value = true;
-      
+
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['srt', 'txt'],
         allowMultiple: false,
       );
-      
+
       if (result != null && result.files.single.path != null) {
         final file = result.files.single;
         srtFileName.value = file.name;
-        
+
         // Read file content
         if (file.bytes != null) {
           final content = String.fromCharCodes(file.bytes!);
@@ -71,12 +69,14 @@ class VideoInputController extends GetxController {
             srtContent.value = fileContent;
             srtTextController.text = fileContent;
             _validateSrtContent(fileContent);
-            print('DEBUG - File loaded from path: ${fileContent.length} characters');
+            print(
+              'DEBUG - File loaded from path: ${fileContent.length} characters',
+            );
           } catch (e) {
             print('DEBUG - Error reading file from path: $e');
           }
         }
-        
+
         Get.snackbar(
           'Thành công',
           'Đã tải file SRT: ${file.name}',
@@ -97,7 +97,7 @@ class VideoInputController extends GetxController {
       isLoading.value = false;
     }
   }
-  
+
   // SRT validation result
   final srtValidationResult = Rxn<SrtValidationResult>();
 
@@ -128,7 +128,8 @@ class VideoInputController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
-    } else if (result.timelineErrors.isNotEmpty || result.silenceGaps.isNotEmpty) {
+    } else if (result.timelineErrors.isNotEmpty ||
+        result.silenceGaps.isNotEmpty) {
       Get.snackbar(
         'Cảnh báo',
         'Phát hiện ${result.timelineErrors.length} lỗi timeline và ${result.silenceGaps.length} khoảng lặng',
@@ -159,7 +160,7 @@ class VideoInputController extends GetxController {
       );
     }
   }
-  
+
   // Clear SRT content
   void clearSrtContent() {
     srtContent.value = '';
@@ -167,17 +168,19 @@ class VideoInputController extends GetxController {
     srtTextController.clear();
     srtValidationResult.value = null;
   }
-  
+
   // Validate and prepare for video player
   bool canPlayVideo() {
     final hasValidUrl = isValidUrl.value;
     final hasSrtContent = srtContent.value.trim().isNotEmpty;
 
-    print('DEBUG - canPlayVideo: URL valid: $hasValidUrl, SRT content: ${srtContent.value.length} chars');
+    print(
+      'DEBUG - canPlayVideo: URL valid: $hasValidUrl, SRT content: ${srtContent.value.length} chars',
+    );
 
     return hasValidUrl && hasSrtContent;
   }
-  
+
   // Navigate to video player
   void playVideoWithSubtitles() {
     if (canPlayVideo()) {

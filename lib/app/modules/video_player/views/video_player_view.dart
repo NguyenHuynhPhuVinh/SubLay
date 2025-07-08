@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 import '../controllers/video_player_controller.dart';
-import '../../main_screen/controllers/main_screen_controller.dart';
 
 class VideoPlayerView extends GetView<VideoPlayerController> {
   const VideoPlayerView({Key? key}) : super(key: key);
@@ -174,7 +174,7 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
           alignment: Alignment.center,
           children: [
             // Outline đen mượt mà
-            Text(
+            AutoSizeText(
               subtitle,
               style: TextStyle(
                 fontSize: 18,
@@ -188,10 +188,13 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
               ),
               textAlign: TextAlign.center,
               maxLines: 5,
+              minFontSize: 12,
+              maxFontSize: 20,
               overflow: TextOverflow.ellipsis,
+              wrapWords: true,
             ),
             // Chữ trắng bên trên
-            Text(
+            AutoSizeText(
               subtitle,
               style: const TextStyle(
                 color: Color(0xFFFFFFF0),
@@ -202,7 +205,10 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
               ),
               textAlign: TextAlign.center,
               maxLines: 5,
+              minFontSize: 12,
+              maxFontSize: 20,
               overflow: TextOverflow.ellipsis,
+              wrapWords: true,
             ),
           ],
         ),
@@ -548,11 +554,11 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
           ),
         ),
         child: Center(
-          child: Text(
+          child: AutoSizeText(
             controller.currentSubtitle.value,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 14, // Giảm từ 16 xuống 14
+              fontSize: 16, // Tăng lại lên 16 vì AutoSizeText sẽ tự điều chỉnh
               fontWeight: FontWeight.w500,
               height: 1.4, // Thêm line height
               shadows: [
@@ -565,7 +571,10 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
             ),
             textAlign: TextAlign.center,
             maxLines: 5, // Tăng từ 4 lên 5 lines
+            minFontSize: 12, // Font size tối thiểu
+            maxFontSize: 18, // Font size tối đa
             overflow: TextOverflow.ellipsis,
+            wrapWords: true, // Quan trọng: cho phép wrap words thông minh
           ),
         ),
       ),

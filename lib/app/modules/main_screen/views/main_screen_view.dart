@@ -7,7 +7,6 @@ import 'package:responsive_builder/responsive_builder.dart';
 
 import '../controllers/main_screen_controller.dart';
 import '../../video_input/views/video_input_view.dart';
-import '../../video_player/views/video_player_view.dart';
 import '../../subtitle_editor/views/subtitle_editor_view.dart';
 import '../../recent_videos/views/recent_videos_view.dart';
 import '../../prompt_manager/views/prompt_manager_view.dart';
@@ -155,7 +154,6 @@ class MainScreenView extends GetView<MainScreenController> {
   Widget _buildNavItem(int index, IconData icon, String label, bool isMobile) {
     final isSelected = controller.currentIndex.value == index;
     final theme = Theme.of(Get.context!);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Expanded(
       child: GestureDetector(
