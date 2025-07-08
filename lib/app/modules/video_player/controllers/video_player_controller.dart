@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/utils/srt_parser.dart';
@@ -14,6 +14,7 @@ class VideoPlayerController extends GetxController {
   // YouTube Player Controller
   YoutubePlayerController? youtubeController;
   Timer? _controlsTimer; // Timer for auto-hiding controls
+  Timer? _positionTimer; // Timer for position updates
 
   // Observable variables
   final isPlayerReady = false.obs;
@@ -77,35 +78,47 @@ class VideoPlayerController extends GetxController {
 
   void _initializePlayer() {
     if (videoId.value.isNotEmpty) {
-      youtubeController = YoutubePlayerController(
-        initialVideoId: videoId.value,
-        flags: const YoutubePlayerFlags(
-          autoPlay: true, // Auto play
+      youtubeController = YoutubePlayerController.fromVideoId(
+        videoId: videoId.value,
+        autoPlay: true,
+        params: const YoutubePlayerParams(
           mute: false,
-          enableCaption: false, // Disable YouTube captions to use our SRT
+          enableCaption: false,
+          enableJavaScript: true,
           loop: false,
-          forceHD: true, // Force HD quality
-          hideControls: true, // Hide YouTube controls to use custom controls
-          disableDragSeek: false, // Allow seeking
-          useHybridComposition: true, // Better performance
+          playsInline: true,
+          showControls: false,
+          showFullscreenButton: false,
+          strictRelatedVideos: false,
         ),
       );
 
-      youtubeController!.addListener(_playerListener);
-      // Don't start auto-save to prevent crash
+      // Start position timer for iframe player
+      _startPositionTimer();
     }
   }
 
-  void _playerListener() {
-    if (youtubeController != null) {
-      isPlayerReady.value = youtubeController!.value.isReady;
-      isPlaying.value = youtubeController!.value.isPlaying;
-      currentPosition.value = youtubeController!.value.position;
-      totalDuration.value = youtubeController!.value.metaData.duration;
+  void _startPositionTimer() {
+    _positionTimer?.cancel();
+    _positionTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+      if (youtubeController != null) {
+        try {
+          final position = await youtubeController!.currentTime;
+          final duration = await youtubeController!.duration;
+          final playerState = await youtubeController!.playerState;
 
-      // Update subtitle based on current position
-      _updateCurrentSubtitle();
-    }
+          currentPosition.value = Duration(seconds: position.toInt());
+          totalDuration.value = Duration(seconds: duration.toInt());
+          isPlaying.value = playerState == PlayerState.playing;
+          isPlayerReady.value = playerState != PlayerState.unknown;
+
+          // Update subtitle based on current position
+          _updateCurrentSubtitle();
+        } catch (e) {
+          print('Error getting player state: $e');
+        }
+      }
+    });
   }
 
   void _parseSrtContent() {
@@ -153,43 +166,62 @@ class VideoPlayerController extends GetxController {
     );
   }
 
-  void togglePlayPause() {
+  void togglePlayPause() async {
     if (youtubeController != null) {
-      if (isPlaying.value) {
-        youtubeController!.pause();
-      } else {
-        // Khi play lại từ trạng thái pause, trừ 5s
-        final currentSeconds = currentPosition.value.inSeconds;
-        final rewindSeconds = currentSeconds < 5 ? 0 : currentSeconds - 5;
-        final rewindPosition = Duration(seconds: rewindSeconds);
+      try {
+        if (isPlaying.value) {
+          await youtubeController!.pauseVideo();
+        } else {
+          // Khi play lại từ trạng thái pause, trừ 5s
+          final currentSeconds = currentPosition.value.inSeconds;
+          final rewindSeconds = currentSeconds < 5 ? 0 : currentSeconds - 5;
+          final rewindPosition = Duration(seconds: rewindSeconds);
 
-        if (rewindPosition != currentPosition.value) {
-          youtubeController!.seekTo(rewindPosition);
-          print(
-            'Rewound 5s before play: ${rewindPosition.inSeconds}s (from ${currentSeconds}s)',
-          );
+          if (rewindPosition != currentPosition.value) {
+            await youtubeController!.seekTo(seconds: rewindPosition.inSeconds.toDouble());
+            print(
+              'Rewound 5s before play: ${rewindPosition.inSeconds}s (from ${currentSeconds}s)',
+            );
+          }
+
+          await youtubeController!.playVideo();
         }
 
-        youtubeController!.play();
+        // Reset controls timer when user interacts
+        _resetControlsTimer();
+      } catch (e) {
+        print('Error toggling play/pause: $e');
       }
     }
   }
 
   // Seek to specific position
-  void seekTo(Duration position) {
+  void seekTo(Duration position) async {
     if (youtubeController != null) {
-      youtubeController!.seekTo(position);
+      try {
+        await youtubeController!.seekTo(seconds: position.inSeconds.toDouble());
+        // Reset controls timer when user interacts
+        _resetControlsTimer();
+      } catch (e) {
+        print('Error seeking to position: $e');
+      }
     }
   }
 
   // Seek relative to current position
-  void seekRelative(int seconds) {
+  void seekRelative(int seconds) async {
     if (youtubeController != null) {
-      final newPosition = currentPosition.value + Duration(seconds: seconds);
-      final clampedPosition = Duration(
-        seconds: newPosition.inSeconds.clamp(0, totalDuration.value.inSeconds),
-      );
-      youtubeController!.seekTo(clampedPosition);
+      try {
+        final newPosition = currentPosition.value + Duration(seconds: seconds);
+        final clampedPosition = Duration(
+          seconds: newPosition.inSeconds.clamp(0, totalDuration.value.inSeconds),
+        );
+        await youtubeController!.seekTo(seconds: clampedPosition.inSeconds.toDouble());
+        // Reset controls timer when user interacts
+        _resetControlsTimer();
+      } catch (e) {
+        print('Error seeking relative: $e');
+      }
     }
   }
 
@@ -247,16 +279,39 @@ class VideoPlayerController extends GetxController {
     showControls.value = !showControls.value;
     if (showControls.value) {
       _startControlsTimer();
+    } else {
+      _controlsTimer?.cancel();
     }
   }
 
   void _startControlsTimer() {
-    // Auto hide controls after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
+    // Cancel existing timer
+    _controlsTimer?.cancel();
+
+    // Auto hide controls after 4 seconds
+    _controlsTimer = Timer(const Duration(seconds: 4), () {
       if (showControls.value) {
         showControls.value = false;
       }
     });
+  }
+
+  // Reset controls timer when user interacts
+  void _resetControlsTimer() {
+    if (isFullScreen.value && showControls.value) {
+      _startControlsTimer();
+    }
+  }
+
+  // Public method to reset controls timer
+  void resetControlsTimer() {
+    _resetControlsTimer();
+  }
+
+  // Show controls and reset timer
+  void showControlsAndResetTimer() {
+    showControls.value = true;
+    _resetControlsTimer();
   }
 
   // Method to set video data directly (for tab navigation)
@@ -311,7 +366,7 @@ class VideoPlayerController extends GetxController {
     _exitFullscreen();
 
     // Clear video data
-    youtubeController?.pause();
+    youtubeController?.pauseVideo();
 
     // Use Navigator.pop instead of Get.back to avoid GetX SnackbarController error
     try {
@@ -333,8 +388,9 @@ class VideoPlayerController extends GetxController {
   void onClose() {
     print('VideoPlayerController.onClose() called');
     _exitFullscreen(); // Restore orientation when controller is disposed
-    youtubeController?.removeListener(_playerListener);
-    youtubeController?.dispose();
+    _positionTimer?.cancel();
+    _controlsTimer?.cancel();
+    youtubeController?.close();
     super.onClose();
   }
 }
