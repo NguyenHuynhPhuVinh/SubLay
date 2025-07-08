@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:flutter/material.dart';
@@ -12,10 +13,11 @@ class VideoPlayerController extends GetxController {
 
   // YouTube Player Controller
   YoutubePlayerController? youtubeController;
+  Timer? _controlsTimer; // Timer for auto-hiding controls
 
   // Observable variables
   final isPlayerReady = false.obs;
-  final isFullScreen = true.obs; // Start in fullscreen
+  final isFullScreen = false.obs; // Start in normal mode
   final currentPosition = Duration.zero.obs;
   final totalDuration = Duration.zero.obs;
   final isPlaying = false.obs;
@@ -35,6 +37,15 @@ class VideoPlayerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // Start in portrait mode (normal mode)
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
+    // Show system UI in normal mode
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     // Get arguments from navigation
     final args = Get.arguments as Map<String, dynamic>?;
@@ -73,8 +84,10 @@ class VideoPlayerController extends GetxController {
           mute: false,
           enableCaption: false, // Disable YouTube captions to use our SRT
           loop: false,
-          forceHD: false,
-          hideControls: false, // Keep YouTube controls for now
+          forceHD: true, // Force HD quality
+          hideControls: true, // Hide YouTube controls to use custom controls
+          disableDragSeek: false, // Allow seeking
+          useHybridComposition: true, // Better performance
         ),
       );
 
@@ -150,17 +163,44 @@ class VideoPlayerController extends GetxController {
     }
   }
 
+  // Seek to specific position
   void seekTo(Duration position) {
     if (youtubeController != null) {
       youtubeController!.seekTo(position);
     }
   }
 
+  // Seek relative to current position
+  void seekRelative(int seconds) {
+    if (youtubeController != null) {
+      final newPosition = currentPosition.value + Duration(seconds: seconds);
+      final clampedPosition = Duration(
+        seconds: newPosition.inSeconds.clamp(0, totalDuration.value.inSeconds),
+      );
+      youtubeController!.seekTo(clampedPosition);
+    }
+  }
+
+  // Getters for compatibility with view
+  Duration get videoPosition => currentPosition.value;
+  Duration get videoDuration => totalDuration.value;
+
   void toggleFullScreen() {
     if (isFullScreen.value) {
       _exitFullscreen();
     } else {
       _enterFullscreen();
+    }
+    update(); // Trigger rebuild
+  }
+
+  // Chỉ thoát fullscreen, không về Input
+  void exitFullscreenOnly() {
+    print('exitFullscreenOnly called');
+    if (isFullScreen.value) {
+      isFullScreen.value = false;
+      _exitFullscreen();
+      update();
     }
   }
 
@@ -173,6 +213,8 @@ class VideoPlayerController extends GetxController {
     ]);
     // Hide system UI - try different approach
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    // Start controls timer for fullscreen
+    _startControlsTimer();
   }
 
   void _exitFullscreen() {
@@ -184,6 +226,9 @@ class VideoPlayerController extends GetxController {
     ]);
     // Show system UI
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    // Stop controls timer when exit fullscreen
+    _controlsTimer?.cancel();
+    showControls.value = true; // Always show controls in normal mode
   }
 
   void toggleControls() {
@@ -200,12 +245,6 @@ class VideoPlayerController extends GetxController {
         showControls.value = false;
       }
     });
-  }
-
-  void goBack() {
-    _saveVideoProgress();
-    _exitFullscreen(); // Restore orientation when leaving
-    Get.back();
   }
 
   // Method to set video data directly (for tab navigation)
@@ -230,8 +269,9 @@ class VideoPlayerController extends GetxController {
       _initializePlayer();
       _parseSrtContent();
       _createVideoModel();
-      _enterFullscreen(); // Auto enter fullscreen
-      _startControlsTimer(); // Auto hide controls
+
+      // Start in normal mode - no auto fullscreen
+      // _startControlsTimer(); // No need for controls timer in normal mode
       // _startAutoSave(); // Disable auto-save for now to prevent crash
       update(); // Trigger GetBuilder rebuild
     }
@@ -251,19 +291,35 @@ class VideoPlayerController extends GetxController {
     }
   }
 
-  void _saveVideoProgress() {
-    // Skip saving for now to prevent crash
-    print('Video progress: ${currentPosition.value} / ${totalDuration.value}');
-  }
+  void goBack() {
+    print('VideoPlayerController.goBack() called');
+    print('Current route: ${Get.currentRoute}');
 
-  // Auto-save disabled to prevent crash
-  void _startAutoSave() {
-    // Disabled to prevent crash
-    print('Auto-save disabled');
+    // Always restore orientation and go back to previous screen
+    _exitFullscreen();
+
+    // Clear video data
+    youtubeController?.pause();
+
+    // Use Navigator.pop instead of Get.back to avoid GetX SnackbarController error
+    try {
+      if (Get.key.currentState?.canPop() == true) {
+        print('Using Navigator.pop()');
+        Get.key.currentState?.pop();
+      } else {
+        print('Using Get.offAllNamed to main screen');
+        Get.offAllNamed('/main');
+      }
+    } catch (e) {
+      print('Navigation error: $e');
+      // Fallback to main screen
+      Get.offAllNamed('/main');
+    }
   }
 
   @override
   void onClose() {
+    print('VideoPlayerController.onClose() called');
     _exitFullscreen(); // Restore orientation when controller is disposed
     youtubeController?.removeListener(_playerListener);
     youtubeController?.dispose();

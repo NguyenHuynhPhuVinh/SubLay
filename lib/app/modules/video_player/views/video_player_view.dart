@@ -21,8 +21,11 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
           return _buildNoVideoScreen();
         }
 
-        // Always show fullscreen player
-        return _buildFullScreenPlayer();
+        return Obx(
+          () => controller.isFullScreen.value
+              ? _buildFullScreenPlayer()
+              : _buildNormalPlayer(),
+        );
       },
     );
   }
@@ -55,25 +58,78 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
     );
   }
 
-  Widget _buildFullScreenPlayer() {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      extendBodyBehindAppBar: true,
-      extendBody: true,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        child: Stack(
-          children: [
-            // Video player takes full screen
-            Positioned.fill(child: _buildVideoPlayer()),
-            // Subtitle overlay
-            _buildFullScreenSubtitleOverlay(),
-            // Controls overlay
-            _buildFullScreenControlsOverlay(),
-            // Back button overlay
-            _buildBackButton(),
+  Widget _buildNormalPlayer() {
+    return WillPopScope(
+      onWillPop: () async {
+        print('WillPop triggered in normal mode');
+        return true; // Allow back navigation
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Obx(
+            () => Text(
+              controller.srtFileName.value.isNotEmpty
+                  ? controller.srtFileName.value
+                  : 'Video Player',
+            ),
+          ),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Iconsax.arrow_left),
+            onPressed: () {
+              print('Back button tapped in normal mode');
+              controller.goBack();
+            },
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Iconsax.arrow_up_3),
+              onPressed: controller.toggleFullScreen,
+            ),
           ],
+        ),
+        body: Column(
+          children: [
+            // Video player
+            Container(
+              width: double.infinity,
+              height: 250,
+              child: _buildVideoPlayer(),
+            ),
+            // Subtitle display
+            _buildSubtitleDisplay(),
+            // Video controls
+            _buildVideoControls(),
+            const Spacer(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFullScreenPlayer() {
+    return WillPopScope(
+      onWillPop: () async {
+        print('WillPop triggered in fullscreen mode');
+        return true; // Allow back navigation
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        extendBodyBehindAppBar: true,
+        extendBody: true,
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          child: Stack(
+            children: [
+              // Video player takes full screen
+              Positioned.fill(child: _buildVideoPlayer()),
+              // Subtitle overlay
+              _buildFullScreenSubtitleOverlay(),
+              // Controls overlay
+              _buildFullScreenControlsOverlay(),
+            ],
+          ),
         ),
       ),
     );
@@ -102,47 +158,262 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
   }
 
   Widget _buildFullScreenSubtitleOverlay() {
-    return Positioned(
-      bottom: 60, // Fixed position from bottom
-      left: 40,
-      right: 40,
-      child: Obx(
-        () => AnimatedOpacity(
-          opacity: controller.currentSubtitle.value.isNotEmpty ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 300),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.75),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 0.5,
+    return Obx(() {
+      final subtitle = controller.currentSubtitle.value;
+      if (subtitle.isEmpty) return const SizedBox.shrink();
+
+      // Tính số dòng để điều chỉnh vị trí
+      final lineCount = '\n'.allMatches(subtitle).length + 1;
+      final bottomPosition = _getSubtitleBottomPosition(lineCount);
+
+      return Positioned(
+        bottom: bottomPosition,
+        left: 40,
+        right: 40,
+        child: Text(
+          subtitle,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            height: 1.3,
+            shadows: [
+              // Multiple shadows để tạo outline mạnh như trong ảnh
+              Shadow(
+                offset: Offset(-1.5, -1.5),
+                blurRadius: 0,
+                color: Colors.black,
               ),
-            ),
-            child: Text(
-              controller.currentSubtitle.value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14, // Smaller font size
-                fontWeight: FontWeight.w500,
-                height: 1.3,
-                shadows: [
-                  Shadow(
-                    offset: Offset(1, 1),
-                    blurRadius: 2,
-                    color: Colors.black,
-                  ),
-                ],
+              Shadow(
+                offset: Offset(1.5, -1.5),
+                blurRadius: 0,
+                color: Colors.black,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2, // Max 2 lines
-              overflow: TextOverflow.ellipsis,
-            ),
+              Shadow(
+                offset: Offset(1.5, 1.5),
+                blurRadius: 0,
+                color: Colors.black,
+              ),
+              Shadow(
+                offset: Offset(-1.5, 1.5),
+                blurRadius: 0,
+                color: Colors.black,
+              ),
+              Shadow(offset: Offset(-2, 0), blurRadius: 0, color: Colors.black),
+              Shadow(offset: Offset(2, 0), blurRadius: 0, color: Colors.black),
+              Shadow(offset: Offset(0, -2), blurRadius: 0, color: Colors.black),
+              Shadow(offset: Offset(0, 2), blurRadius: 0, color: Colors.black),
+            ],
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 5,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
+    });
+  }
+
+  // Tính vị trí bottom dựa trên số dòng (thấp hơn nữa)
+  double _getSubtitleBottomPosition(int lineCount) {
+    switch (lineCount) {
+      case 1:
+        return 5.0; // Thấp hơn nữa: 10 -> 5
+      case 2:
+        return 8.0; // Thấp hơn nữa: 15 -> 8
+      case 3:
+        return 12.0; // Thấp hơn nữa: 20 -> 12
+      case 4:
+        return 16.0; // Thấp hơn nữa: 25 -> 16
+      default:
+        return 20.0; // Thấp hơn nữa: 30 -> 20
+    }
+  }
+
+  // Show quality selector dialog
+  void _showQualitySelector() {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.black.withOpacity(0.8),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Chất lượng video',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildQualityOption('Auto', 'auto'),
+              _buildQualityOption('1080p', 'hd1080'),
+              _buildQualityOption('720p', 'hd720'),
+              _buildQualityOption('480p', 'large'),
+              _buildQualityOption('360p', 'medium'),
+              _buildQualityOption('240p', 'small'),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildQualityOption(String label, String quality) {
+    return ListTile(
+      title: Text(label, style: const TextStyle(color: Colors.white)),
+      onTap: () {
+        // Close dialog
+        Get.back();
+
+        // Show snackbar
+        Get.snackbar(
+          'Chất lượng video',
+          'Đã chọn $label',
+          backgroundColor: Colors.black.withOpacity(0.8),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+
+        // Note: YouTube Player Flutter doesn't support runtime quality change
+        // This is just UI feedback. Quality is controlled by forceHD flag
+      },
+    );
+  }
+
+  // Bottom controls with progress bar and time controls
+  Widget _buildBottomControls() {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Progress bar
+              _buildProgressBar(),
+              SizedBox(height: 12.h),
+              // Control buttons row
+              _buildControlButtons(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Progress bar with time display
+  Widget _buildProgressBar() {
+    return Obx(() {
+      final duration = controller.totalDuration.value;
+      final position = controller.currentPosition.value;
+
+      return Row(
+        children: [
+          // Current time
+          Text(
+            _formatDuration(position),
+            style: TextStyle(color: Colors.white, fontSize: 12.sp),
+          ),
+          SizedBox(width: 8.w),
+          // Progress slider
+          Expanded(
+            child: SliderTheme(
+              data: const SliderThemeData(
+                activeTrackColor: Colors.red,
+                inactiveTrackColor: Colors.white24,
+                thumbColor: Colors.red,
+                thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
+                overlayShape: RoundSliderOverlayShape(overlayRadius: 12),
+                trackHeight: 3,
+              ),
+              child: Slider(
+                value: duration.inSeconds > 0
+                    ? (position.inSeconds / duration.inSeconds).clamp(0.0, 1.0)
+                    : 0.0,
+                onChanged: (value) {
+                  final newPosition = Duration(
+                    seconds: (value * duration.inSeconds).round(),
+                  );
+                  controller.seekTo(newPosition);
+                },
+              ),
+            ),
+          ),
+          SizedBox(width: 8.w),
+          // Total duration
+          Text(
+            _formatDuration(duration),
+            style: TextStyle(color: Colors.white, fontSize: 12.sp),
+          ),
+        ],
+      );
+    });
+  }
+
+  // Control buttons (rewind, play/pause, forward)
+  Widget _buildControlButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Rewind 10s
+        GestureDetector(
+          onTap: () => controller.seekRelative(-10),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            child: const Icon(Icons.replay_10, color: Colors.white, size: 32),
+          ),
+        ),
+        SizedBox(width: 24.w),
+        // Play/Pause
+        Obx(
+          () => GestureDetector(
+            onTap: controller.togglePlayPause,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                controller.isPlaying.value ? Icons.pause : Icons.play_arrow,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 24.w),
+        // Forward 10s
+        GestureDetector(
+          onTap: () => controller.seekRelative(10),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            child: const Icon(Icons.forward_10, color: Colors.white, size: 32),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Format duration to mm:ss
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   Widget _buildFullScreenControlsOverlay() {
@@ -154,6 +425,22 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
           color: Colors.black.withOpacity(0.3),
           child: Stack(
             children: [
+              // Tap area to toggle controls and play/pause (bottom layer)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {
+                    // Single tap toggles controls
+                    controller.toggleControls();
+                  },
+                  onDoubleTap: () {
+                    // Double tap toggles play/pause
+                    controller.togglePlayPause();
+                  },
+                  behavior: HitTestBehavior.translucent,
+                  child: Container(),
+                ),
+              ),
+
               // Top bar
               Positioned(
                 top: 0,
@@ -177,11 +464,19 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
                     ),
                     child: Row(
                       children: [
-                        IconButton(
-                          onPressed: controller.goBack,
-                          icon: const Icon(Iconsax.arrow_left),
-                          color: Colors.white,
-                          iconSize: 24.r,
+                        GestureDetector(
+                          onTap: () {
+                            print('Back button tapped in fullscreen!');
+                            controller.goBack();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            child: const Icon(
+                              Iconsax.arrow_left,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
                         ),
                         SizedBox(width: 8.w),
                         Expanded(
@@ -198,11 +493,34 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
                             ),
                           ),
                         ),
-                        IconButton(
-                          onPressed: controller.toggleFullScreen,
-                          icon: Icon(Iconsax.close_square),
-                          color: Colors.white,
-                          iconSize: 20.r,
+                        // Quality button
+                        GestureDetector(
+                          onTap: _showQualitySelector,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              Icons.hd,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        GestureDetector(
+                          onTap: () {
+                            print(
+                              'Minimize button tapped - exit fullscreen only!',
+                            );
+                            controller.exitFullscreenOnly();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              Iconsax.arrow_down_1, // Luôn là minimize icon
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -210,39 +528,8 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
                 ),
               ),
 
-              // Center play/pause button
-              Center(
-                child: Obx(
-                  () => AnimatedOpacity(
-                    opacity: controller.showControls.value ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: controller.togglePlayPause,
-                        icon: Icon(
-                          controller.isPlaying.value
-                              ? Iconsax.pause
-                              : Iconsax.play,
-                        ),
-                        color: Colors.white,
-                        iconSize: 40.r,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Center tap area to toggle controls
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: controller.toggleControls,
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
+              // Bottom controls bar (chỉ giữ controls ở bottom)
+              _buildBottomControls(),
             ],
           ),
         ),
@@ -250,26 +537,120 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
     );
   }
 
-  Widget _buildBackButton() {
-    return Positioned(
-      top: 40,
-      left: 20,
-      child: SafeArea(
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.6),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            onPressed: () {
-              // Go back to previous screen
-              Get.back();
-            },
-            icon: const Icon(Iconsax.arrow_left),
-            color: Colors.white,
-            iconSize: 24,
+  Widget _buildSubtitleDisplay() {
+    return Obx(
+      () => Container(
+        width: double.infinity,
+        height: 150, // Tăng từ 120 lên 150
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.8),
+          border: Border(
+            top: BorderSide(color: Colors.grey.withOpacity(0.3)),
+            bottom: BorderSide(color: Colors.grey.withOpacity(0.3)),
           ),
         ),
+        child: Center(
+          child: Text(
+            controller.currentSubtitle.value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14, // Giảm từ 16 xuống 14
+              fontWeight: FontWeight.w500,
+              height: 1.4, // Thêm line height
+              shadows: [
+                Shadow(
+                  offset: Offset(1, 1),
+                  blurRadius: 2,
+                  color: Colors.black,
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 5, // Tăng từ 4 lên 5 lines
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoControls() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Progress bar
+          Obx(
+            () => Slider(
+              value: controller.currentPosition.value.inSeconds.toDouble(),
+              max: controller.totalDuration.value.inSeconds.toDouble(),
+              onChanged: (value) {
+                controller.seekTo(Duration(seconds: value.toInt()));
+              },
+              activeColor: Colors.red,
+              inactiveColor: Colors.grey[300],
+            ),
+          ),
+
+          // Time display
+          Obx(
+            () => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatDuration(controller.currentPosition.value),
+                  style: const TextStyle(fontSize: 12),
+                ),
+                Text(
+                  _formatDuration(controller.totalDuration.value),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Control buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                onPressed: () {
+                  final newPosition =
+                      controller.currentPosition.value -
+                      const Duration(seconds: 10);
+                  controller.seekTo(newPosition);
+                },
+                icon: const Icon(Iconsax.backward_10_seconds),
+                iconSize: 32,
+              ),
+
+              Obx(
+                () => IconButton(
+                  onPressed: controller.togglePlayPause,
+                  icon: Icon(
+                    controller.isPlaying.value ? Iconsax.pause : Iconsax.play,
+                  ),
+                  iconSize: 40,
+                  color: Colors.red,
+                ),
+              ),
+
+              IconButton(
+                onPressed: () {
+                  final newPosition =
+                      controller.currentPosition.value +
+                      const Duration(seconds: 10);
+                  controller.seekTo(newPosition);
+                },
+                icon: const Icon(Iconsax.forward_10_seconds),
+                iconSize: 32,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
