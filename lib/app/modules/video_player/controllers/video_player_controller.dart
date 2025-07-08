@@ -84,10 +84,13 @@ class VideoPlayerController extends GetxController {
           mute: false,
           enableCaption: false, // Disable YouTube captions to use our SRT
           loop: false,
-          forceHD: true, // Force HD quality
+          forceHD: true, // Force HD quality (720p+)
           hideControls: true, // Hide YouTube controls to use custom controls
           disableDragSeek: false, // Allow seeking
           useHybridComposition: true, // Better performance
+          // Thêm các flag để optimize quality
+          isLive: false, // Đảm bảo không phải live stream
+          controlsVisibleAtStart: false, // Ẩn controls ngay từ đầu
         ),
       );
 
@@ -172,6 +175,9 @@ class VideoPlayerController extends GetxController {
 
         youtubeController!.play();
       }
+
+      // Reset controls timer when user interacts
+      _resetControlsTimer();
     }
   }
 
@@ -179,6 +185,8 @@ class VideoPlayerController extends GetxController {
   void seekTo(Duration position) {
     if (youtubeController != null) {
       youtubeController!.seekTo(position);
+      // Reset controls timer when user interacts
+      _resetControlsTimer();
     }
   }
 
@@ -190,6 +198,8 @@ class VideoPlayerController extends GetxController {
         seconds: newPosition.inSeconds.clamp(0, totalDuration.value.inSeconds),
       );
       youtubeController!.seekTo(clampedPosition);
+      // Reset controls timer when user interacts
+      _resetControlsTimer();
     }
   }
 
@@ -247,16 +257,39 @@ class VideoPlayerController extends GetxController {
     showControls.value = !showControls.value;
     if (showControls.value) {
       _startControlsTimer();
+    } else {
+      _controlsTimer?.cancel();
     }
   }
 
   void _startControlsTimer() {
-    // Auto hide controls after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
+    // Cancel existing timer
+    _controlsTimer?.cancel();
+
+    // Auto hide controls after 4 seconds
+    _controlsTimer = Timer(const Duration(seconds: 4), () {
       if (showControls.value) {
         showControls.value = false;
       }
     });
+  }
+
+  // Reset controls timer when user interacts
+  void _resetControlsTimer() {
+    if (isFullScreen.value && showControls.value) {
+      _startControlsTimer();
+    }
+  }
+
+  // Public method to reset controls timer
+  void resetControlsTimer() {
+    _resetControlsTimer();
+  }
+
+  // Show controls and reset timer
+  void showControlsAndResetTimer() {
+    showControls.value = true;
+    _resetControlsTimer();
   }
 
   // Method to set video data directly (for tab navigation)
