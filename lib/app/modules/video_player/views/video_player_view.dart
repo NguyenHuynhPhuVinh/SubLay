@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -138,22 +138,7 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
   Widget _buildVideoPlayer() {
     return YoutubePlayer(
       controller: controller.youtubeController!,
-      showVideoProgressIndicator: false, // Hide default progress bar
-      progressIndicatorColor: Colors.red,
-      progressColors: const ProgressBarColors(
-        playedColor: Colors.red,
-        handleColor: Colors.redAccent,
-      ),
       aspectRatio: 16 / 9, // Standard video aspect ratio
-      onReady: () {
-        controller.isPlayerReady.value = true;
-        // Auto play when ready
-        controller.youtubeController!.play();
-      },
-      onEnded: (data) {
-        // Video ended - could show replay options
-        controller.showControls.value = true;
-      },
     );
   }
 
