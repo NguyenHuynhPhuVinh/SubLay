@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
 import '../controllers/video_input_controller.dart';
+import '../widgets/srt_validation_widget.dart';
 
 class VideoInputView extends GetView<VideoInputController> {
   const VideoInputView({Key? key}) : super(key: key);
@@ -294,6 +295,13 @@ class VideoInputView extends GetView<VideoInputController> {
               ),
             ),
           ),
+          // SRT Validation Widget
+          Obx(() => controller.srtValidationResult.value != null
+              ? SrtValidationWidget(
+                  validationResult: controller.srtValidationResult.value!,
+                  onFixApplied: controller.applyAutoFix,
+                )
+              : const SizedBox()),
         ],
       ),
     );

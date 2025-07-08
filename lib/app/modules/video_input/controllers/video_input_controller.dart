@@ -59,16 +59,19 @@ class VideoInputController extends GetxController {
         
         // Read file content
         if (file.bytes != null) {
-          srtContent.value = String.fromCharCodes(file.bytes!);
-          srtTextController.text = srtContent.value;
-          print('DEBUG - File loaded: ${srtContent.value.length} characters');
+          final content = String.fromCharCodes(file.bytes!);
+          srtContent.value = content;
+          srtTextController.text = content;
+          _validateSrtContent(content);
+          print('DEBUG - File loaded: ${content.length} characters');
         } else if (file.path != null) {
           // Fallback: read from file path
           try {
             final fileContent = await File(file.path!).readAsString();
             srtContent.value = fileContent;
-            srtTextController.text = srtContent.value;
-            print('DEBUG - File loaded from path: ${srtContent.value.length} characters');
+            srtTextController.text = fileContent;
+            _validateSrtContent(fileContent);
+            print('DEBUG - File loaded from path: ${fileContent.length} characters');
           } catch (e) {
             print('DEBUG - Error reading file from path: $e');
           }
@@ -95,17 +98,63 @@ class VideoInputController extends GetxController {
     }
   }
   
+  // SRT validation result
+  final srtValidationResult = Rxn<SrtValidationResult>();
+
   // Update SRT content from text input
   void updateSrtContent(String content) {
     srtContent.value = content;
+    _validateSrtContent(content);
+  }
 
-    // Validate SRT content
-    if (content.isNotEmpty && !SrtParser.isValidSrtContent(content)) {
+  // Validate SRT content
+  void _validateSrtContent(String content) {
+    if (content.trim().isEmpty) {
+      srtValidationResult.value = null;
+      return;
+    }
+
+    // Perform validation and auto-fix
+    final result = SrtParser.validateAndFixSrt(content);
+    srtValidationResult.value = result;
+
+    // Show summary notification
+    if (result.formatFixesCount > 0) {
+      Get.snackbar(
+        'Phát hiện lỗi định dạng',
+        'Đã tìm thấy ${result.formatFixesCount} lỗi định dạng có thể sửa tự động',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.blue.withOpacity(0.8),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    } else if (result.timelineErrors.isNotEmpty || result.silenceGaps.isNotEmpty) {
       Get.snackbar(
         'Cảnh báo',
-        'Nội dung SRT có thể không đúng định dạng',
+        'Phát hiện ${result.timelineErrors.length} lỗi timeline và ${result.silenceGaps.length} khoảng lặng',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange.withOpacity(0.8),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  // Apply auto-fix for format errors
+  void applyAutoFix() {
+    final result = srtValidationResult.value;
+    if (result?.fixedContent != null) {
+      srtContent.value = result!.fixedContent!;
+      srtTextController.text = result.fixedContent!;
+
+      // Re-validate after applying fix
+      _validateSrtContent(result.fixedContent!);
+
+      Get.snackbar(
+        'Thành công',
+        'Đã áp dụng sửa lỗi tự động cho ${result.formatFixesCount} lỗi định dạng',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.withOpacity(0.8),
         colorText: Colors.white,
       );
     }
@@ -116,6 +165,7 @@ class VideoInputController extends GetxController {
     srtContent.value = '';
     srtFileName.value = '';
     srtTextController.clear();
+    srtValidationResult.value = null;
   }
   
   // Validate and prepare for video player
