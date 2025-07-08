@@ -158,6 +158,18 @@ class VideoPlayerController extends GetxController {
       if (isPlaying.value) {
         youtubeController!.pause();
       } else {
+        // Khi play lại từ trạng thái pause, trừ 5s
+        final currentSeconds = currentPosition.value.inSeconds;
+        final rewindSeconds = currentSeconds < 5 ? 0 : currentSeconds - 5;
+        final rewindPosition = Duration(seconds: rewindSeconds);
+
+        if (rewindPosition != currentPosition.value) {
+          youtubeController!.seekTo(rewindPosition);
+          print(
+            'Rewound 5s before play: ${rewindPosition.inSeconds}s (from ${currentSeconds}s)',
+          );
+        }
+
         youtubeController!.play();
       }
     }
