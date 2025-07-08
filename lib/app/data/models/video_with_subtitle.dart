@@ -26,10 +26,10 @@ class VideoWithSubtitle extends HiveObject {
   DateTime lastWatched;
 
   @HiveField(7)
-  Duration lastPosition;
+  int lastPositionMs;
 
   @HiveField(8)
-  Duration totalDuration;
+  int totalDurationMs;
 
   @HiveField(9)
   int subtitleCount;
@@ -42,8 +42,8 @@ class VideoWithSubtitle extends HiveObject {
     required this.srtContent,
     required this.srtFileName,
     required this.lastWatched,
-    this.lastPosition = Duration.zero,
-    this.totalDuration = Duration.zero,
+    this.lastPositionMs = 0,
+    this.totalDurationMs = 0,
     this.subtitleCount = 0,
   });
 
@@ -67,10 +67,17 @@ class VideoWithSubtitle extends HiveObject {
     );
   }
 
+  // Duration getters/setters
+  Duration get lastPosition => Duration(milliseconds: lastPositionMs);
+  set lastPosition(Duration duration) => lastPositionMs = duration.inMilliseconds;
+
+  Duration get totalDuration => Duration(milliseconds: totalDurationMs);
+  set totalDuration(Duration duration) => totalDurationMs = duration.inMilliseconds;
+
   // Get progress percentage
   double get progressPercentage {
-    if (totalDuration.inSeconds == 0) return 0.0;
-    return (lastPosition.inSeconds / totalDuration.inSeconds).clamp(0.0, 1.0);
+    if (totalDurationMs == 0) return 0.0;
+    return (lastPositionMs / totalDurationMs).clamp(0.0, 1.0);
   }
 
   // Check if video was recently watched (within 7 days)

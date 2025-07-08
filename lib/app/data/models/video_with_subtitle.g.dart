@@ -24,8 +24,8 @@ class VideoWithSubtitleAdapter extends TypeAdapter<VideoWithSubtitle> {
       srtContent: fields[4] as String,
       srtFileName: fields[5] as String,
       lastWatched: fields[6] as DateTime,
-      lastPosition: fields[7] as Duration,
-      totalDuration: fields[8] as Duration,
+      lastPositionMs: fields[7] as int,
+      totalDurationMs: fields[8] as int,
       subtitleCount: fields[9] as int,
     );
   }
@@ -49,9 +49,9 @@ class VideoWithSubtitleAdapter extends TypeAdapter<VideoWithSubtitle> {
       ..writeByte(6)
       ..write(obj.lastWatched)
       ..writeByte(7)
-      ..write(obj.lastPosition)
+      ..write(obj.lastPositionMs)
       ..writeByte(8)
-      ..write(obj.totalDuration)
+      ..write(obj.totalDurationMs)
       ..writeByte(9)
       ..write(obj.subtitleCount);
   }

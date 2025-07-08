@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/utils/srt_parser.dart';
 import '../../../data/services/video_history_service.dart';
 import '../../../data/models/video_with_subtitle.dart';
@@ -14,7 +15,7 @@ class VideoPlayerController extends GetxController {
 
   // Observable variables
   final isPlayerReady = false.obs;
-  final isFullScreen = false.obs;
+  final isFullScreen = true.obs; // Start in fullscreen
   final currentPosition = Duration.zero.obs;
   final totalDuration = Duration.zero.obs;
   final isPlaying = false.obs;
@@ -23,10 +24,10 @@ class VideoPlayerController extends GetxController {
 
   // Subtitle data
   List<SrtSubtitle> subtitles = [];
-  String srtContent = '';
-  String videoId = '';
-  String youtubeUrl = '';
-  String srtFileName = '';
+  final srtContent = ''.obs;
+  final videoId = ''.obs;
+  final youtubeUrl = ''.obs;
+  final srtFileName = ''.obs;
 
   // Current video model
   VideoWithSubtitle? currentVideo;
@@ -37,33 +38,48 @@ class VideoPlayerController extends GetxController {
 
     // Get arguments from navigation
     final args = Get.arguments as Map<String, dynamic>?;
-    if (args != null) {
-      videoId = args['videoId'] ?? '';
-      youtubeUrl = args['youtubeUrl'] ?? '';
-      srtContent = args['srtContent'] ?? '';
-      srtFileName = args['srtFileName'] ?? '';
+    print('DEBUG - VideoPlayer arguments: $args');
 
-      _initializePlayer();
-      _parseSrtContent();
-      _createVideoModel();
+    if (args != null) {
+      videoId.value = args['videoId'] ?? '';
+      youtubeUrl.value = args['youtubeUrl'] ?? '';
+      srtContent.value = args['srtContent'] ?? '';
+      srtFileName.value = args['srtFileName'] ?? '';
+
+      print('DEBUG - VideoPlayer data:');
+      print('  - videoId: ${videoId.value}');
+      print('  - youtubeUrl: ${youtubeUrl.value}');
+      print('  - srtContent length: ${srtContent.value.length}');
+      print('  - srtFileName: ${srtFileName.value}');
+
+      if (videoId.value.isNotEmpty) {
+        _initializePlayer();
+        _parseSrtContent();
+        _createVideoModel();
+      } else {
+        print('ERROR - No videoId provided');
+      }
+    } else {
+      print('ERROR - No arguments provided to VideoPlayer');
     }
   }
 
   void _initializePlayer() {
-    if (videoId.isNotEmpty) {
+    if (videoId.value.isNotEmpty) {
       youtubeController = YoutubePlayerController(
-        initialVideoId: videoId,
+        initialVideoId: videoId.value,
         flags: const YoutubePlayerFlags(
-          autoPlay: false,
+          autoPlay: true, // Auto play
           mute: false,
           enableCaption: false, // Disable YouTube captions to use our SRT
           loop: false,
           forceHD: false,
+          hideControls: false, // Keep YouTube controls for now
         ),
       );
 
       youtubeController!.addListener(_playerListener);
-      _startAutoSave();
+      // Don't start auto-save to prevent crash
     }
   }
 
@@ -80,10 +96,10 @@ class VideoPlayerController extends GetxController {
   }
 
   void _parseSrtContent() {
-    if (srtContent.isNotEmpty) {
+    if (srtContent.value.isNotEmpty) {
       try {
         // Parse SRT content using custom parser
-        subtitles = SrtParser.parse(srtContent);
+        subtitles = SrtParser.parse(srtContent.value);
 
         if (subtitles.isNotEmpty) {
           Get.snackbar(
@@ -141,50 +157,114 @@ class VideoPlayerController extends GetxController {
   }
 
   void toggleFullScreen() {
-    isFullScreen.value = !isFullScreen.value;
+    if (isFullScreen.value) {
+      _exitFullscreen();
+    } else {
+      _enterFullscreen();
+    }
+  }
+
+  void _enterFullscreen() {
+    isFullScreen.value = true;
+    // Set landscape orientation
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    // Hide system UI - try different approach
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+  }
+
+  void _exitFullscreen() {
+    isFullScreen.value = false;
+    // Restore portrait orientation
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    // Show system UI
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
   void toggleControls() {
     showControls.value = !showControls.value;
-  }
-
-  void goBack() {
-    _saveVideoProgress();
-    Get.back();
-  }
-
-  void _createVideoModel() {
-    if (videoId.isNotEmpty) {
-      currentVideo = VideoWithSubtitle.fromInput(
-        videoId: videoId,
-        youtubeUrl: youtubeUrl,
-        srtContent: srtContent,
-        srtFileName: srtFileName,
-      );
-
-      // Save to history
-      _historyService.addOrUpdateVideo(currentVideo!);
+    if (showControls.value) {
+      _startControlsTimer();
     }
   }
 
-  void _saveVideoProgress() {
-    if (currentVideo != null) {
-      currentVideo!.updateProgress(currentPosition.value, totalDuration.value);
-      _historyService.addOrUpdateVideo(currentVideo!);
-    }
-  }
-
-  // Auto-save progress every 10 seconds
-  void _startAutoSave() {
-    Stream.periodic(const Duration(seconds: 10)).listen((_) {
-      if (isPlaying.value && currentVideo != null) {
-        _saveVideoProgress();
+  void _startControlsTimer() {
+    // Auto hide controls after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (showControls.value) {
+        showControls.value = false;
       }
     });
   }
 
+  void goBack() {
+    _saveVideoProgress();
+    _exitFullscreen(); // Restore orientation when leaving
+    Get.back();
+  }
+
+  // Method to set video data directly (for tab navigation)
+  void setVideoData({
+    required String videoId,
+    required String youtubeUrl,
+    required String srtContent,
+    required String srtFileName,
+  }) {
+    print('DEBUG - setVideoData called with:');
+    print('  - videoId: $videoId');
+    print('  - youtubeUrl: $youtubeUrl');
+    print('  - srtContent length: ${srtContent.length}');
+    print('  - srtFileName: $srtFileName');
+
+    this.videoId.value = videoId;
+    this.youtubeUrl.value = youtubeUrl;
+    this.srtContent.value = srtContent;
+    this.srtFileName.value = srtFileName;
+
+    if (videoId.isNotEmpty) {
+      _initializePlayer();
+      _parseSrtContent();
+      _createVideoModel();
+      _enterFullscreen(); // Auto enter fullscreen
+      _startControlsTimer(); // Auto hide controls
+      // _startAutoSave(); // Disable auto-save for now to prevent crash
+      update(); // Trigger GetBuilder rebuild
+    }
+  }
+
+  void _createVideoModel() {
+    if (videoId.value.isNotEmpty) {
+      currentVideo = VideoWithSubtitle.fromInput(
+        videoId: videoId.value,
+        youtubeUrl: youtubeUrl.value,
+        srtContent: srtContent.value,
+        srtFileName: srtFileName.value,
+      );
+
+      // Skip saving to history for now to prevent crash
+      // _historyService.addOrUpdateVideo(currentVideo!);
+    }
+  }
+
+  void _saveVideoProgress() {
+    // Skip saving for now to prevent crash
+    print('Video progress: ${currentPosition.value} / ${totalDuration.value}');
+  }
+
+  // Auto-save disabled to prevent crash
+  void _startAutoSave() {
+    // Disabled to prevent crash
+    print('Auto-save disabled');
+  }
+
   @override
   void onClose() {
+    _exitFullscreen(); // Restore orientation when controller is disposed
     youtubeController?.removeListener(_playerListener);
     youtubeController?.dispose();
     super.onClose();

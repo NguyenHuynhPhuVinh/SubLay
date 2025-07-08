@@ -18,6 +18,21 @@ class MainScreenController extends GetxController {
     currentIndex.value = index;
   }
 
+  // Navigate to video player (outside of tab navigation)
+  void navigateToVideoPlayer({
+    required String videoId,
+    required String youtubeUrl,
+    required String srtContent,
+    required String srtFileName,
+  }) {
+    Get.toNamed('/video_player', arguments: {
+      'videoId': videoId,
+      'youtubeUrl': youtubeUrl,
+      'srtContent': srtContent,
+      'srtFileName': srtFileName,
+    });
+  }
+
   @override
   void onInit() {
     super.onInit();

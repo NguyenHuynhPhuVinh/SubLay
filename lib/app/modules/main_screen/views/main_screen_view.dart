@@ -21,11 +21,10 @@ class MainScreenView extends GetView<MainScreenController> {
       body: Obx(() => IndexedStack(
         index: controller.currentIndex.value,
         children: const [
-          VideoInputView(),
-          VideoPlayerView(),
-          SubtitleEditorView(),
-          RecentVideosView(),
-          AppSettingsView(),
+          VideoInputView(),        // Tab 0
+          SubtitleEditorView(),    // Tab 1
+          RecentVideosView(),      // Tab 2
+          AppSettingsView(),       // Tab 3
         ],
       )),
       bottomNavigationBar: _buildResponsiveNavBar(),
@@ -66,10 +65,9 @@ class MainScreenView extends GetView<MainScreenController> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildNavItem(0, Iconsax.video, 'Input', true),
-              _buildNavItem(1, Iconsax.play, 'Player', true),
-              _buildNavItem(2, Iconsax.edit, 'Editor', true),
-              _buildNavItem(3, Iconsax.clock, 'Recent', true),
-              _buildNavItem(4, Iconsax.setting_2, 'Settings', true),
+              _buildNavItem(1, Iconsax.edit, 'Editor', true),
+              _buildNavItem(2, Iconsax.clock, 'Recent', true),
+              _buildNavItem(3, Iconsax.setting_2, 'Settings', true),
             ],
           )),
         ),
@@ -111,11 +109,6 @@ class MainScreenView extends GetView<MainScreenController> {
               GButton(
                 icon: Iconsax.video,
                 text: 'Video Input',
-                textStyle: TextStyle(fontSize: 12.sp),
-              ),
-              GButton(
-                icon: Iconsax.play,
-                text: 'Player',
                 textStyle: TextStyle(fontSize: 12.sp),
               ),
               GButton(

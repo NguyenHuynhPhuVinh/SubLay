@@ -6,38 +6,35 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../controllers/video_player_controller.dart';
+import '../../main_screen/controllers/main_screen_controller.dart';
 
 class VideoPlayerView extends GetView<VideoPlayerController> {
   const VideoPlayerView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      if (controller.youtubeController == null) {
-        return _buildNoVideoScreen();
-      }
+    return GetBuilder<VideoPlayerController>(
+      builder: (controller) {
+        // Check if controller has video data
+        if (controller.youtubeController == null ||
+            controller.videoId.value.isEmpty) {
+          return _buildNoVideoScreen();
+        }
 
-      return controller.isFullScreen.value
-          ? _buildFullScreenPlayer()
-          : _buildNormalPlayer();
-    });
+        // Always show fullscreen player
+        return _buildFullScreenPlayer();
+      },
+    );
   }
 
   Widget _buildNoVideoScreen() {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Video Player'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Video Player'), centerTitle: true),
       body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Iconsax.video_slash,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Iconsax.video_slash, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'Chưa có video',
@@ -50,38 +47,10 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
             SizedBox(height: 8),
             Text(
               'Vui lòng chọn video từ Video Input',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNormalPlayer() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(controller.srtFileName.isNotEmpty 
-            ? controller.srtFileName 
-            : 'Video Player'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Iconsax.maximize_4),
-            onPressed: controller.toggleFullScreen,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildVideoPlayer(),
-          _buildSubtitleDisplay(),
-          _buildVideoControls(),
-          const Spacer(),
-        ],
       ),
     );
   }
@@ -89,238 +58,219 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
   Widget _buildFullScreenPlayer() {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Center(child: _buildVideoPlayer()),
-          _buildFullScreenOverlay(),
-        ],
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        child: Stack(
+          children: [
+            // Video player takes full screen
+            Positioned.fill(child: _buildVideoPlayer()),
+            // Subtitle overlay
+            _buildFullScreenSubtitleOverlay(),
+            // Controls overlay
+            _buildFullScreenControlsOverlay(),
+            // Back button overlay
+            _buildBackButton(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildVideoPlayer() {
-    return Container(
-      width: double.infinity,
-      height: controller.isFullScreen.value ? double.infinity : 250.h,
-      child: YoutubePlayer(
-        controller: controller.youtubeController!,
-        showVideoProgressIndicator: true,
-        progressIndicatorColor: Colors.red,
-        progressColors: const ProgressBarColors(
-          playedColor: Colors.red,
-          handleColor: Colors.redAccent,
+    return YoutubePlayer(
+      controller: controller.youtubeController!,
+      showVideoProgressIndicator: false, // Hide default progress bar
+      progressIndicatorColor: Colors.red,
+      progressColors: const ProgressBarColors(
+        playedColor: Colors.red,
+        handleColor: Colors.redAccent,
+      ),
+      aspectRatio: 16 / 9, // Standard video aspect ratio
+      onReady: () {
+        controller.isPlayerReady.value = true;
+        // Auto play when ready
+        controller.youtubeController!.play();
+      },
+      onEnded: (data) {
+        // Video ended - could show replay options
+        controller.showControls.value = true;
+      },
+    );
+  }
+
+  Widget _buildFullScreenSubtitleOverlay() {
+    return Positioned(
+      bottom: 60, // Fixed position from bottom
+      left: 40,
+      right: 40,
+      child: Obx(
+        () => AnimatedOpacity(
+          opacity: controller.currentSubtitle.value.isNotEmpty ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 300),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.75),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 0.5,
+              ),
+            ),
+            child: Text(
+              controller.currentSubtitle.value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14, // Smaller font size
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+                shadows: [
+                  Shadow(
+                    offset: Offset(1, 1),
+                    blurRadius: 2,
+                    color: Colors.black,
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2, // Max 2 lines
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ),
-        onReady: () {
-          controller.isPlayerReady.value = true;
-        },
-        onEnded: (data) {
-          // Video ended
-        },
       ),
     );
   }
 
-  Widget _buildSubtitleDisplay() {
-    return Obx(() => Container(
-      width: double.infinity,
-      height: 80.h,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
-        border: Border(
-          top: BorderSide(color: Colors.grey.withOpacity(0.3)),
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.3)),
-        ),
-      ),
-      child: Center(
-        child: Text(
-          controller.currentSubtitle.value,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w500,
-            shadows: [
-              Shadow(
-                offset: const Offset(1, 1),
-                blurRadius: 2,
-                color: Colors.black.withOpacity(0.8),
-              ),
-            ],
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    ));
-  }
-
-  Widget _buildVideoControls() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        children: [
-          // Progress bar
-          Obx(() => Slider(
-            value: controller.currentPosition.value.inSeconds.toDouble(),
-            max: controller.totalDuration.value.inSeconds.toDouble(),
-            onChanged: (value) {
-              controller.seekTo(Duration(seconds: value.toInt()));
-            },
-            activeColor: Colors.red,
-            inactiveColor: Colors.grey[300],
-          )),
-          
-          // Time display
-          Obx(() => Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildFullScreenControlsOverlay() {
+    return Obx(
+      () => AnimatedOpacity(
+        opacity: controller.showControls.value ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 300),
+        child: Container(
+          color: Colors.black.withOpacity(0.3),
+          child: Stack(
             children: [
-              Text(
-                _formatDuration(controller.currentPosition.value),
-                style: TextStyle(fontSize: 12.sp),
-              ),
-              Text(
-                _formatDuration(controller.totalDuration.value),
-                style: TextStyle(fontSize: 12.sp),
-              ),
-            ],
-          )),
-          
-          SizedBox(height: 16.h),
-          
-          // Control buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                onPressed: () {
-                  final newPosition = controller.currentPosition.value - 
-                      const Duration(seconds: 10);
-                  controller.seekTo(newPosition);
-                },
-                icon: const Icon(Iconsax.backward_10_seconds),
-                iconSize: 32.r,
-              ),
-              
-              Obx(() => IconButton(
-                onPressed: controller.togglePlayPause,
-                icon: Icon(
-                  controller.isPlaying.value 
-                      ? Iconsax.pause 
-                      : Iconsax.play,
-                ),
-                iconSize: 40.r,
-                color: Colors.red,
-              )),
-              
-              IconButton(
-                onPressed: () {
-                  final newPosition = controller.currentPosition.value + 
-                      const Duration(seconds: 10);
-                  controller.seekTo(newPosition);
-                },
-                icon: const Icon(Iconsax.forward_10_seconds),
-                iconSize: 32.r,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFullScreenOverlay() {
-    return Obx(() => AnimatedOpacity(
-      opacity: controller.showControls.value ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 300),
-      child: Container(
-        color: Colors.black.withOpacity(0.3),
-        child: Stack(
-          children: [
-            // Top bar
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: controller.toggleFullScreen,
-                        icon: const Icon(Iconsax.arrow_left),
-                        color: Colors.white,
+              // Top bar
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.7),
+                          Colors.transparent,
+                        ],
                       ),
-                      Expanded(
-                        child: Text(
-                          controller.srtFileName.isNotEmpty 
-                              ? controller.srtFileName 
-                              : 'DuTupSRT',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w500,
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: controller.goBack,
+                          icon: const Icon(Iconsax.arrow_left),
+                          color: Colors.white,
+                          iconSize: 24.r,
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Obx(
+                            () => Text(
+                              controller.srtFileName.value.isNotEmpty
+                                  ? controller.srtFileName.value
+                                  : 'DuTupSRT',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        IconButton(
+                          onPressed: controller.toggleFullScreen,
+                          icon: Icon(Iconsax.close_square),
+                          color: Colors.white,
+                          iconSize: 20.r,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            
-            // Bottom subtitle
-            Positioned(
-              bottom: 100.h,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 32.w),
-                child: Text(
-                  controller.currentSubtitle.value,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w600,
-                    shadows: [
-                      Shadow(
-                        offset: const Offset(2, 2),
-                        blurRadius: 4,
-                        color: Colors.black.withOpacity(0.8),
+
+              // Center play/pause button
+              Center(
+                child: Obx(
+                  () => AnimatedOpacity(
+                    opacity: controller.showControls.value ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        shape: BoxShape.circle,
                       ),
-                    ],
+                      child: IconButton(
+                        onPressed: controller.togglePlayPause,
+                        icon: Icon(
+                          controller.isPlaying.value
+                              ? Iconsax.pause
+                              : Iconsax.play,
+                        ),
+                        color: Colors.white,
+                        iconSize: 40.r,
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ),
-            
-            // Center tap area to toggle controls
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: controller.toggleControls,
-                child: Container(color: Colors.transparent),
+
+              // Center tap area to toggle controls
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: controller.toggleControls,
+                  child: Container(color: Colors.transparent),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = twoDigits(duration.inHours);
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    
-    if (duration.inHours > 0) {
-      return '$hours:$minutes:$seconds';
-    } else {
-      return '$minutes:$seconds';
-    }
+  Widget _buildBackButton() {
+    return Positioned(
+      top: 40,
+      left: 20,
+      child: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.6),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            onPressed: () {
+              // Go back to previous screen
+              Get.back();
+            },
+            icon: const Icon(Iconsax.arrow_left),
+            color: Colors.white,
+            iconSize: 24,
+          ),
+        ),
+      ),
+    );
   }
 }
