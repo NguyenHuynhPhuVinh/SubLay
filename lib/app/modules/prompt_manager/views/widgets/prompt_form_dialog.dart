@@ -54,7 +54,7 @@ class PromptFormDialog extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Iconsax.close_circle),
-                    onPressed: () => Get.back(),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
@@ -228,7 +228,7 @@ class PromptFormDialog extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Get.back(),
+                      onPressed: () => Navigator.of(context).pop(),
                       child: const Text('Hủy'),
                     ),
                   ),

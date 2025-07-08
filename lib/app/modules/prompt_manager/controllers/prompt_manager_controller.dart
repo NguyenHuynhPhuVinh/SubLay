@@ -103,7 +103,12 @@ class PromptManagerController extends GetxController {
         );
         await _promptService.updatePrompt(updatedPrompt);
         clearForm();
-        Get.back(); // Close dialog/bottom sheet
+
+        // Close dialog/bottom sheet
+        if (Get.isDialogOpen == true) {
+          Get.back();
+        }
+
         Get.snackbar(
           'Thành công',
           'Đã cập nhật prompt',
@@ -124,7 +129,12 @@ class PromptManagerController extends GetxController {
         );
         await _promptService.addPrompt(newPrompt);
         clearForm();
-        Get.back(); // Close dialog/bottom sheet
+
+        // Close dialog/bottom sheet
+        if (Get.isDialogOpen == true) {
+          Get.back();
+        }
+
         Get.snackbar(
           'Thành công',
           'Đã thêm prompt mới',
@@ -153,11 +163,11 @@ class PromptManagerController extends GetxController {
         content: Text('Bạn có chắc muốn xóa prompt "${prompt.title}"?'),
         actions: [
           TextButton(
-            onPressed: () => Get.back(result: false),
+            onPressed: () => Navigator.of(Get.context!).pop(false),
             child: const Text('Hủy'),
           ),
           TextButton(
-            onPressed: () => Get.back(result: true),
+            onPressed: () => Navigator.of(Get.context!).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Xóa'),
           ),
