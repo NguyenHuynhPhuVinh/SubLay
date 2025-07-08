@@ -10,6 +10,7 @@ class RecentVideosController extends GetxController {
   final isLoading = false.obs;
   final searchQuery = ''.obs;
   final filteredVideos = <VideoWithSubtitle>[].obs;
+  final showSearchInput = false.obs;
 
   // Text controller for search
   final searchController = TextEditingController();
@@ -46,6 +47,13 @@ class RecentVideosController extends GetxController {
     searchController.clear();
     searchQuery.value = '';
     _filterVideos();
+  }
+
+  void toggleSearchInput() {
+    showSearchInput.value = !showSearchInput.value;
+    if (!showSearchInput.value) {
+      clearSearch();
+    }
   }
 
   Future<void> removeVideo(VideoWithSubtitle video) async {

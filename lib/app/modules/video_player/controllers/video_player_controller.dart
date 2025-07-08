@@ -286,8 +286,8 @@ class VideoPlayerController extends GetxController {
         srtFileName: srtFileName.value,
       );
 
-      // Skip saving to history for now to prevent crash
-      // _historyService.addOrUpdateVideo(currentVideo!);
+      // Save to history when user starts watching (no auto-update)
+      _historyService.addOrUpdateVideo(currentVideo!);
     }
   }
 

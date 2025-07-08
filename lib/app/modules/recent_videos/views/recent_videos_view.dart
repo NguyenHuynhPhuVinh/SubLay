@@ -18,10 +18,14 @@ class RecentVideosView extends GetView<RecentVideosController> {
         title: const Text('Recent Videos'),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Iconsax.search_normal),
-            onPressed: _showSearchDialog,
-          ),
+          Obx(() => IconButton(
+            icon: Icon(
+              controller.showSearchInput.value
+                ? Iconsax.close_circle
+                : Iconsax.search_normal
+            ),
+            onPressed: controller.toggleSearchInput,
+          )),
           PopupMenuButton<String>(
             icon: const Icon(Iconsax.more),
             onSelected: (value) {
@@ -56,17 +60,57 @@ class RecentVideosView extends GetView<RecentVideosController> {
           ),
         ],
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return _buildLoadingView();
-        }
+      body: Column(
+        children: [
+          // Search input
+          Obx(() => AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            height: controller.showSearchInput.value ? 60.h : 0,
+            child: controller.showSearchInput.value
+                ? Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    child: TextField(
+                      controller: controller.searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Nhập tên video hoặc file SRT...',
+                        prefixIcon: const Icon(Iconsax.search_normal),
+                        suffixIcon: controller.searchQuery.value.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Iconsax.close_circle),
+                                onPressed: controller.clearSearch,
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 12.h,
+                        ),
+                      ),
+                      onChanged: controller.searchVideos,
+                      autofocus: true,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          )),
 
-        if (controller.filteredVideos.isEmpty) {
-          return _buildEmptyView();
-        }
+          // Video list
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return _buildLoadingView();
+              }
 
-        return _buildVideoList();
-      }),
+              if (controller.filteredVideos.isEmpty) {
+                return _buildEmptyView();
+              }
+
+              return _buildVideoList();
+            }),
+          ),
+        ],
+      ),
     );
   }
 
@@ -346,35 +390,7 @@ class RecentVideosView extends GetView<RecentVideosController> {
     );
   }
 
-  void _showSearchDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Tìm kiếm video'),
-        content: TextField(
-          controller: controller.searchController,
-          decoration: const InputDecoration(
-            hintText: 'Nhập tên video hoặc file SRT...',
-            prefixIcon: Icon(Iconsax.search_normal),
-          ),
-          onChanged: controller.searchVideos,
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.clearSearch();
-              Get.back();
-            },
-            child: const Text('Xóa'),
-          ),
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Đóng'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showDeleteDialog(VideoWithSubtitle video) {
     Get.dialog(
@@ -383,18 +399,19 @@ class RecentVideosView extends GetView<RecentVideosController> {
         content: Text('Bạn có chắc muốn xóa "${video.title}" khỏi lịch sử?'),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () => Navigator.of(Get.context!).pop(),
             child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
               controller.removeVideo(video);
-              Get.back();
+              Navigator.of(Get.context!).pop();
             },
             child: const Text('Xóa', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
+      barrierDismissible: true,
     );
   }
 
@@ -405,18 +422,19 @@ class RecentVideosView extends GetView<RecentVideosController> {
         content: const Text('Bạn có chắc muốn xóa tất cả lịch sử video?'),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () => Navigator.of(Get.context!).pop(),
             child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
               controller.clearAllHistory();
-              Get.back();
+              Navigator.of(Get.context!).pop();
             },
             child: const Text('Xóa tất cả', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
+      barrierDismissible: true,
     );
   }
 
@@ -437,11 +455,12 @@ class RecentVideosView extends GetView<RecentVideosController> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () => Navigator.of(Get.context!).pop(),
             child: const Text('Đóng'),
           ),
         ],
       ),
+      barrierDismissible: true,
     );
   }
 

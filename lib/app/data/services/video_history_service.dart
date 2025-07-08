@@ -33,28 +33,30 @@ class VideoHistoryService extends GetxService {
     videos.sort((a, b) => b.lastWatched.compareTo(a.lastWatched));
   }
 
-  // Add or update video in history
+  // Add or update video in history (only save original data, no auto-update)
   Future<void> addOrUpdateVideo(VideoWithSubtitle video) async {
     try {
       // Check if video already exists
       final existingIndex = videos.indexWhere((v) => v.videoId == video.videoId);
-      
+
       if (existingIndex != -1) {
-        // Update existing video
+        // Update existing video only if SRT content is different
         final existingVideo = videos[existingIndex];
-        existingVideo.lastWatched = video.lastWatched;
-        existingVideo.lastPosition = video.lastPosition;
-        existingVideo.totalDuration = video.totalDuration;
-        existingVideo.srtContent = video.srtContent;
-        existingVideo.srtFileName = video.srtFileName;
-        
-        await existingVideo.save();
+        if (existingVideo.srtContent != video.srtContent ||
+            existingVideo.srtFileName != video.srtFileName) {
+          existingVideo.lastWatched = video.lastWatched;
+          existingVideo.srtContent = video.srtContent;
+          existingVideo.srtFileName = video.srtFileName;
+          // Don't update position/duration - keep original data
+
+          await existingVideo.save();
+        }
       } else {
         // Add new video
         await _box.add(video);
         videos.add(video);
       }
-      
+
       _loadVideos(); // Refresh and sort
     } catch (e) {
       print('Error adding/updating video: $e');
