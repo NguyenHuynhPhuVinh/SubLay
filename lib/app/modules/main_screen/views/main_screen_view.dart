@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:responsive_builder/responsive_builder.dart';
+import 'package:responsive_builder/responsive_builder.dart' as rb;
 
 import '../controllers/main_screen_controller.dart';
 import '../../video_input/views/video_input_view.dart';
@@ -11,12 +11,22 @@ import '../../subtitle_editor/views/subtitle_editor_view.dart';
 import '../../recent_videos/views/recent_videos_view.dart';
 import '../../prompt_manager/views/prompt_manager_view.dart';
 import '../../app_settings/views/app_settings_view.dart';
+import '../../../core/utils/responsive_helper.dart';
+import '../../../widgets/responsive_layout.dart' as rl;
+import '../../../widgets/desktop_sidebar.dart';
 
 class MainScreenView extends GetView<MainScreenController> {
   const MainScreenView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    return rl.ResponsiveLayout(
+      mobile: _buildMobileLayout(),
+      desktop: _buildDesktopLayout(),
+    );
+  }
+
+  Widget _buildMobileLayout() {
     return Scaffold(
       body: Obx(
         () => IndexedStack(
@@ -34,10 +44,52 @@ class MainScreenView extends GetView<MainScreenController> {
     );
   }
 
+  Widget _buildDesktopLayout() {
+    return Scaffold(
+      body: Row(
+        children: [
+          // Desktop Sidebar
+          DesktopSidebar(),
+          // Main Content Area
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(Get.context!).colorScheme.background,
+              ),
+              child: Obx(
+                () => IndexedStack(
+                  index: controller.currentIndex.value,
+                  children: [
+                    _buildDesktopContent(const VideoInputView()),
+                    _buildDesktopContent(const SubtitleEditorView()),
+                    _buildDesktopContent(const RecentVideosView()),
+                    _buildDesktopContent(const PromptManagerView()),
+                    _buildDesktopContent(const AppSettingsView()),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopContent(Widget child) {
+    return rl.DesktopContentWrapper(
+      child: child,
+    );
+  }
+
   Widget _buildResponsiveNavBar() {
-    return ResponsiveBuilder(
+    return rb.ResponsiveBuilder(
       builder: (context, sizingInformation) {
-        if (sizingInformation.deviceScreenType == DeviceScreenType.mobile) {
+        // Chỉ hiển thị bottom nav cho mobile và tablet
+        if (sizingInformation.deviceScreenType == rb.DeviceScreenType.desktop) {
+          return const SizedBox.shrink();
+        }
+
+        if (sizingInformation.deviceScreenType == rb.DeviceScreenType.mobile) {
           return _buildMobileNavBar();
         } else {
           return _buildTabletNavBar();

@@ -6,12 +6,26 @@ import 'package:auto_size_text/auto_size_text.dart';
 
 import '../controllers/video_input_controller.dart';
 import '../widgets/srt_validation_widget.dart';
+import '../../../core/utils/responsive_helper.dart' as rh;
+import '../../../widgets/responsive_layout.dart' as rl;
 
 class VideoInputView extends GetView<VideoInputController> {
   const VideoInputView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    return rl.ResponsiveBuilder(
+      builder: (context, deviceType) {
+        if (deviceType == rh.DeviceType.desktop) {
+          return _buildDesktopLayout(context);
+        } else {
+          return _buildMobileLayout(context);
+        }
+      },
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('DuTupSRT'),
@@ -31,6 +45,46 @@ class VideoInputView extends GetView<VideoInputController> {
             _buildSrtSection(),
             SizedBox(height: 32.h),
             _buildPlayButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Scaffold(
+      appBar: null, // Không cần AppBar cho desktop vì đã có sidebar
+      body: Padding(
+        padding: EdgeInsets.all(32.w),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left column - Header and URL input
+            Expanded(
+              flex: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeader(),
+                  SizedBox(height: 32.h),
+                  _buildYouTubeUrlSection(),
+                  SizedBox(height: 32.h),
+                  _buildPlayButton(),
+                ],
+              ),
+            ),
+            SizedBox(width: 32.w),
+            // Right column - SRT section
+            Expanded(
+              flex: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 80.h), // Align with left column content
+                  _buildSrtSection(),
+                ],
+              ),
+            ),
           ],
         ),
       ),

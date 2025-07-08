@@ -7,6 +7,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
 import '../controllers/video_player_controller.dart';
+import '../../../core/utils/responsive_helper.dart' as rh;
+import '../../../widgets/responsive_layout.dart' as rl;
 
 class VideoPlayerView extends GetView<VideoPlayerController> {
   const VideoPlayerView({Key? key}) : super(key: key);
@@ -64,43 +66,173 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
         print('WillPop triggered in normal mode');
         return true; // Allow back navigation
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Obx(
-            () => Text(
-              controller.srtFileName.value.isNotEmpty
-                  ? controller.srtFileName.value
-                  : 'Video Player',
-            ),
+      child: rl.ResponsiveBuilder(
+        builder: (context, deviceType) {
+          if (deviceType == rh.DeviceType.desktop) {
+            return _buildDesktopPlayer();
+          } else {
+            return _buildMobilePlayer();
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildMobilePlayer() {
+    return Scaffold(
+      appBar: AppBar(
+        title: Obx(
+          () => Text(
+            controller.srtFileName.value.isNotEmpty
+                ? controller.srtFileName.value
+                : 'Video Player',
           ),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Iconsax.arrow_left),
-            onPressed: () {
-              print('Back button tapped in normal mode');
-              controller.goBack();
-            },
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Iconsax.arrow_up_3),
-              onPressed: controller.toggleFullScreen,
-            ),
-          ],
         ),
-        body: Column(
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Iconsax.arrow_left),
+          onPressed: () {
+            print('Back button tapped in normal mode');
+            controller.goBack();
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Iconsax.arrow_up_3),
+            onPressed: controller.toggleFullScreen,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Video player
+          Container(
+            width: double.infinity,
+            height: 250,
+            child: _buildVideoPlayer(),
+          ),
+          // Subtitle display
+          _buildSubtitleDisplay(),
+          // Video controls
+          _buildVideoControls(),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopPlayer() {
+    return Scaffold(
+      appBar: AppBar(
+        title: Obx(
+          () => Text(
+            controller.srtFileName.value.isNotEmpty
+                ? controller.srtFileName.value
+                : 'Video Player',
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Iconsax.arrow_left),
+          onPressed: () {
+            print('Back button tapped in normal mode');
+            controller.goBack();
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Iconsax.arrow_up_3),
+            onPressed: controller.toggleFullScreen,
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(32.w),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Video player
-            Container(
-              width: double.infinity,
-              height: 250,
-              child: _buildVideoPlayer(),
+            // Left side - Video player
+            Expanded(
+              flex: 2,
+              child: Column(
+                children: [
+                  // Video player với aspect ratio 16:9
+                  AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: _buildVideoPlayer(),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  // Video controls
+                  _buildVideoControls(),
+                ],
+              ),
             ),
-            // Subtitle display
-            _buildSubtitleDisplay(),
-            // Video controls
-            _buildVideoControls(),
-            const Spacer(),
+            SizedBox(width: 32.w),
+            // Right side - Subtitle display
+            Expanded(
+              flex: 1,
+              child: Container(
+                height: 400,
+                decoration: BoxDecoration(
+                  color: Theme.of(Get.context!).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(Get.context!).dividerColor,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(Get.context!).primaryColor.withOpacity(0.1),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Iconsax.subtitle,
+                            color: Theme.of(Get.context!).primaryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Phụ đề',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(Get.context!).primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildSubtitleDisplay(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

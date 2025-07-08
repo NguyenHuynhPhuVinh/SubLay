@@ -8,6 +8,8 @@ import '../controllers/prompt_manager_controller.dart';
 import '../../../data/models/prompt_model.dart';
 import 'widgets/prompt_card.dart';
 import 'widgets/prompt_form_dialog.dart';
+import '../../../core/utils/responsive_helper.dart' as rh;
+import '../../../widgets/responsive_layout.dart' as rl;
 
 class PromptManagerView extends GetView<PromptManagerController> {
   const PromptManagerView({Key? key}) : super(key: key);
@@ -127,11 +129,46 @@ class PromptManagerView extends GetView<PromptManagerController> {
       );
     }
 
+    return rl.ResponsiveBuilder(
+      builder: (context, deviceType) {
+        if (deviceType == rh.DeviceType.desktop) {
+          return _buildDesktopGrid(filteredPrompts);
+        } else {
+          return _buildMobileList(filteredPrompts);
+        }
+      },
+    );
+  }
+
+  Widget _buildMobileList(List<PromptModel> prompts) {
     return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
-      itemCount: filteredPrompts.length,
+      itemCount: prompts.length,
       itemBuilder: (context, index) {
-        final prompt = filteredPrompts[index];
+        final prompt = prompts[index];
+        return PromptCard(
+          prompt: prompt,
+          onTap: () => _showPromptDetail(context, prompt),
+          onEdit: () => _showPromptForm(context, prompt: prompt),
+          onDelete: () => controller.deletePrompt(prompt),
+          onCopy: () => controller.copyPromptToClipboard(prompt),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopGrid(List<PromptModel> prompts) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(24),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 24,
+        mainAxisSpacing: 24,
+        childAspectRatio: 1.2,
+      ),
+      itemCount: prompts.length,
+      itemBuilder: (context, index) {
+        final prompt = prompts[index];
         return PromptCard(
           prompt: prompt,
           onTap: () => _showPromptDetail(context, prompt),
