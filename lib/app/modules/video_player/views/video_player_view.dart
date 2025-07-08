@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -138,7 +138,22 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
   Widget _buildVideoPlayer() {
     return YoutubePlayer(
       controller: controller.youtubeController!,
+      showVideoProgressIndicator: false, // Hide default progress bar
+      progressIndicatorColor: Colors.red,
+      progressColors: const ProgressBarColors(
+        playedColor: Colors.red,
+        handleColor: Colors.redAccent,
+      ),
       aspectRatio: 16 / 9, // Standard video aspect ratio
+      onReady: () {
+        controller.isPlayerReady.value = true;
+        // Auto play when ready
+        controller.youtubeController!.play();
+      },
+      onEnded: (data) {
+        // Video ended - could show replay options
+        controller.showControls.value = true;
+      },
     );
   }
 
@@ -158,19 +173,17 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Layer 1: Outline đen mượt mà
+            // Outline đen mượt mà
             AutoSizeText(
               subtitle,
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 height: 1.3,
                 letterSpacing: 0.5,
                 foreground: Paint()
                   ..style = PaintingStyle.stroke
-                  ..strokeWidth = 3.0
-                  ..strokeJoin = StrokeJoin.round
-                  ..strokeCap = StrokeCap.round
+                  ..strokeWidth = 2
                   ..color = Colors.black,
               ),
               textAlign: TextAlign.center,
@@ -180,13 +193,13 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
               overflow: TextOverflow.ellipsis,
               wrapWords: true,
             ),
-            // Layer 2: Chữ trắng bên trong
+            // Chữ trắng bên trên
             AutoSizeText(
               subtitle,
               style: const TextStyle(
-                color: Colors.white,
+                color: Color(0xFFFFFFF0),
                 fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 height: 1.3,
                 letterSpacing: 0.5,
               ),
@@ -273,76 +286,8 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
     );
   }
 
-  // Center control buttons (3 nút chính ở giữa màn hình)
-  Widget _buildCenterControlButtons() {
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Rewind 10s
-          GestureDetector(
-            onTap: () {
-              controller.seekRelative(-10);
-              controller.showControlsAndResetTimer();
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.replay_10, color: Colors.white, size: 36),
-            ),
-          ),
-          SizedBox(width: 40.w),
-          // Play/Pause (nút lớn nhất)
-          Obx(
-            () => GestureDetector(
-              onTap: () {
-                controller.togglePlayPause();
-                controller.showControlsAndResetTimer();
-              },
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  controller.isPlaying.value ? Icons.pause : Icons.play_arrow,
-                  color: Colors.white,
-                  size: 48,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 40.w),
-          // Forward 10s
-          GestureDetector(
-            onTap: () {
-              controller.seekRelative(10);
-              controller.showControlsAndResetTimer();
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.forward_10,
-                color: Colors.white,
-                size: 36,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Bottom progress bar only (chỉ thanh kéo ở sát dưới)
-  Widget _buildBottomProgressBar() {
+  // Bottom controls with progress bar and time controls
+  Widget _buildBottomControls() {
     return Positioned(
       bottom: 0,
       left: 0,
@@ -356,7 +301,18 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
             colors: [Colors.black.withOpacity(0.8), Colors.transparent],
           ),
         ),
-        child: SafeArea(child: _buildProgressBar()),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Progress bar
+              _buildProgressBar(),
+              SizedBox(height: 12.h),
+              // Control buttons row
+              _buildControlButtons(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -396,14 +352,6 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
                   );
                   controller.seekTo(newPosition);
                 },
-                onChangeStart: (value) {
-                  // Show controls when user starts dragging
-                  controller.showControlsAndResetTimer();
-                },
-                onChangeEnd: (value) {
-                  // Reset timer when user finishes dragging
-                  controller.resetControlsTimer();
-                },
               ),
             ),
           ),
@@ -418,6 +366,51 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
     });
   }
 
+  // Control buttons (rewind, play/pause, forward)
+  Widget _buildControlButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Rewind 10s
+        GestureDetector(
+          onTap: () => controller.seekRelative(-10),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            child: const Icon(Icons.replay_10, color: Colors.white, size: 32),
+          ),
+        ),
+        SizedBox(width: 24.w),
+        // Play/Pause
+        Obx(
+          () => GestureDetector(
+            onTap: controller.togglePlayPause,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                controller.isPlaying.value ? Icons.pause : Icons.play_arrow,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 24.w),
+        // Forward 10s
+        GestureDetector(
+          onTap: () => controller.seekRelative(10),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            child: const Icon(Icons.forward_10, color: Colors.white, size: 32),
+          ),
+        ),
+      ],
+    );
+  }
+
   // Format duration to mm:ss
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -428,130 +421,121 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
 
   Widget _buildFullScreenControlsOverlay() {
     return Obx(
-      () => Stack(
-        children: [
-          // Tap area luôn hoạt động (không bị ignore)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () {
-                // Single tap toggles controls
-                controller.toggleControls();
-              },
-              onDoubleTap: () {
-                // Double tap toggles play/pause
-                controller.togglePlayPause();
-              },
-              behavior: HitTestBehavior.translucent,
-              child: Container(),
-            ),
-          ),
+      () => AnimatedOpacity(
+        opacity: controller.showControls.value ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 300),
+        child: Container(
+          color: Colors.black.withOpacity(0.3),
+          child: Stack(
+            children: [
+              // Tap area to toggle controls and play/pause (bottom layer)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {
+                    // Single tap toggles controls
+                    controller.toggleControls();
+                  },
+                  onDoubleTap: () {
+                    // Double tap toggles play/pause
+                    controller.togglePlayPause();
+                  },
+                  behavior: HitTestBehavior.translucent,
+                  child: Container(),
+                ),
+              ),
 
-          // Controls overlay với IgnorePointer riêng
-          IgnorePointer(
-            ignoring:
-                !controller.showControls.value, // Ignore touch khi controls ẩn
-            child: AnimatedOpacity(
-              opacity: controller.showControls.value ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: Stack(
-                children: [
-                  // Top bar
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: SafeArea(
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 8.h,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.7),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                print('Back button tapped in fullscreen!');
-                                controller.goBack();
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                child: const Icon(
-                                  Iconsax.arrow_left,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Obx(
-                                () => Text(
-                                  controller.srtFileName.value.isNotEmpty
-                                      ? controller.srtFileName.value
-                                      : 'DuTupSRT',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Quality button
-                            GestureDetector(
-                              onTap: _showQualitySelector,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                child: const Icon(
-                                  Icons.hd,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            GestureDetector(
-                              onTap: () {
-                                print(
-                                  'Minimize button tapped - exit fullscreen only!',
-                                );
-                                controller.exitFullscreenOnly();
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                child: const Icon(
-                                  Iconsax.arrow_down_1, // Luôn là minimize icon
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+              // Top bar
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.7),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            print('Back button tapped in fullscreen!');
+                            controller.goBack();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            child: const Icon(
+                              Iconsax.arrow_left,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Obx(
+                            () => Text(
+                              controller.srtFileName.value.isNotEmpty
+                                  ? controller.srtFileName.value
+                                  : 'DuTupSRT',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Quality button
+                        GestureDetector(
+                          onTap: _showQualitySelector,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              Icons.hd,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        GestureDetector(
+                          onTap: () {
+                            print(
+                              'Minimize button tapped - exit fullscreen only!',
+                            );
+                            controller.exitFullscreenOnly();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              Iconsax.arrow_down_1, // Luôn là minimize icon
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-
-                  // Center control buttons (3 nút chính ở giữa)
-                  _buildCenterControlButtons(),
-
-                  // Bottom progress bar only (thanh kéo ở sát dưới)
-                  _buildBottomProgressBar(),
-                ],
+                ),
               ),
-            ),
+
+              // Bottom controls bar (chỉ giữ controls ở bottom)
+              _buildBottomControls(),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
