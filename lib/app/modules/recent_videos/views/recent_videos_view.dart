@@ -7,8 +7,6 @@ import 'package:shimmer/shimmer.dart';
 
 import '../controllers/recent_videos_controller.dart';
 import '../../../data/models/video_with_subtitle.dart';
-import '../../../core/utils/responsive_helper.dart' as rh;
-import '../../../widgets/responsive_layout.dart' as rl;
 
 class RecentVideosView extends GetView<RecentVideosController> {
   const RecentVideosView({Key? key}) : super(key: key);
@@ -218,41 +216,12 @@ class RecentVideosView extends GetView<RecentVideosController> {
   }
 
   Widget _buildVideoList() {
-    return rl.ResponsiveBuilder(
-      builder: (context, deviceType) {
-        if (deviceType == rh.DeviceType.desktop) {
-          return _buildDesktopGrid();
-        } else {
-          return _buildMobileList();
-        }
-      },
-    );
-  }
-
-  Widget _buildMobileList() {
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
       itemCount: controller.filteredVideos.length,
       itemBuilder: (context, index) {
         final video = controller.filteredVideos[index];
         return _buildVideoItem(video);
-      },
-    );
-  }
-
-  Widget _buildDesktopGrid() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(24),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 24,
-        mainAxisSpacing: 24,
-        childAspectRatio: 2.5,
-      ),
-      itemCount: controller.filteredVideos.length,
-      itemBuilder: (context, index) {
-        final video = controller.filteredVideos[index];
-        return _buildDesktopVideoCard(video);
       },
     );
   }
@@ -516,133 +485,6 @@ class RecentVideosView extends GetView<RecentVideosController> {
       return '${hours}h ${minutes}m';
     } else {
       return '${minutes}m';
-    }
-  }
-
-  Widget _buildDesktopVideoCard(VideoWithSubtitle video) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: () => controller.playVideo(video),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Thumbnail
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: video.thumbnail,
-                  width: 160,
-                  height: 90,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[300],
-                    child: Icon(
-                      Iconsax.video,
-                      color: Colors.grey[600],
-                      size: 32,
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[300],
-                    child: Icon(
-                      Iconsax.video_slash,
-                      color: Colors.grey[600],
-                      size: 32,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 16),
-
-              // Video info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      video.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      video.srtFileName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Iconsax.clock,
-                          size: 14,
-                          color: Colors.grey[500],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _formatDateDesktop(video.lastWatched),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Action buttons
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: () => controller.playVideo(video),
-                    icon: const Icon(Iconsax.play),
-                    tooltip: 'Phát video',
-                  ),
-                  IconButton(
-                    onPressed: () => controller.removeVideo(video),
-                    icon: const Icon(Iconsax.trash),
-                    tooltip: 'Xóa video',
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _formatDateDesktop(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays} ngày trước';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} giờ trước';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} phút trước';
-    } else {
-      return 'Vừa xong';
     }
   }
 }
