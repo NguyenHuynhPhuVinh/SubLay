@@ -122,20 +122,34 @@ class VideoInputView extends GetView<VideoInputController> {
             ],
           ),
           SizedBox(height: 12.h),
-          TextField(
-            controller: controller.urlController,
-            onChanged: controller.validateYouTubeUrl,
-            decoration: InputDecoration(
-              hintText: 'Dán link YouTube vào đây...',
-              prefixIcon: const Icon(Iconsax.video_play),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller.urlController,
+                  onChanged: controller.validateYouTubeUrl,
+                  decoration: InputDecoration(
+                    hintText: 'Dán link YouTube vào đây...',
+                    prefixIcon: const Icon(Iconsax.video_play),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                  ),
+                ),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: Colors.red, width: 2),
-              ),
-            ),
+              SizedBox(width: 8.w),
+              Obx(() => controller.youtubeUrl.value.isNotEmpty
+                  ? IconButton(
+                      onPressed: controller.clearYouTubeUrl,
+                      icon: const Icon(Iconsax.trash),
+                      color: Colors.red,
+                    )
+                  : const SizedBox()),
+            ],
           ),
           SizedBox(height: 8.h),
           Obx(() => controller.isValidUrl.value

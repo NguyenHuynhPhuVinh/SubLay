@@ -171,6 +171,13 @@ class VideoInputController extends GetxController {
     srtValidationResult.value = null;
   }
 
+  // Clear YouTube URL
+  void clearYouTubeUrl() {
+    youtubeUrl.value = '';
+    urlController.clear();
+    isValidUrl.value = false;
+  }
+
   // Validate and prepare for video player
   bool canPlayVideo() {
     final hasValidUrl = isValidUrl.value;
