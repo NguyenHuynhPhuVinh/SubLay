@@ -26,22 +26,26 @@ class PromptManagerView extends GetView<PromptManagerController> {
             tooltip: 'Mở Google AI Studio',
             onPressed: () => _openAIStudio(),
           ),
-          Obx(() => IconButton(
-            icon: Icon(
-              controller.showPromptList.value
-                ? Iconsax.add_circle
-                : Iconsax.arrow_left_2,
+          Obx(
+            () => IconButton(
+              icon: Icon(
+                controller.showPromptList.value
+                    ? Iconsax.add_circle
+                    : Iconsax.arrow_left_2,
+              ),
+              onPressed: controller.toggleView,
+              tooltip: controller.showPromptList.value
+                  ? 'Thêm prompt mới'
+                  : 'Quay lại danh sách',
             ),
-            onPressed: controller.toggleView,
-            tooltip: controller.showPromptList.value
-                ? 'Thêm prompt mới'
-                : 'Quay lại danh sách',
-          )),
+          ),
         ],
       ),
-      body: Obx(() => controller.showPromptList.value
-          ? _buildPromptListView()
-          : _buildPromptFormView()),
+      body: Obx(
+        () => controller.showPromptList.value
+            ? _buildPromptListView()
+            : _buildPromptFormView(),
+      ),
     );
   }
 
@@ -65,24 +69,32 @@ class PromptManagerView extends GetView<PromptManagerController> {
           ),
           SizedBox(height: 12.h),
           // Category filter
-          Obx(() => SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: controller.categories.map((category) {
-                final isSelected = controller.selectedCategory.value == category;
-                return Padding(
-                  padding: EdgeInsets.only(right: 8.w),
-                  child: FilterChip(
-                    label: Text(category),
-                    selected: isSelected,
-                    onSelected: (_) => controller.setSelectedCategory(category),
-                    backgroundColor: Theme.of(Get.context!).colorScheme.surface,
-                    selectedColor: Theme.of(Get.context!).colorScheme.primaryContainer,
-                  ),
-                );
-              }).toList(),
+          Obx(
+            () => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: controller.categories.map((category) {
+                  final isSelected =
+                      controller.selectedCategory.value == category;
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: FilterChip(
+                      label: Text(category),
+                      selected: isSelected,
+                      onSelected: (_) =>
+                          controller.setSelectedCategory(category),
+                      backgroundColor: Theme.of(
+                        Get.context!,
+                      ).colorScheme.surface,
+                      selectedColor: Theme.of(
+                        Get.context!,
+                      ).colorScheme.primaryContainer,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -93,26 +105,20 @@ class PromptManagerView extends GetView<PromptManagerController> {
     return Column(
       children: [
         _buildSearchAndFilter(),
-        Expanded(
-          child: Obx(() => _buildPromptList()),
-        ),
+        Expanded(child: Obx(() => _buildPromptList())),
       ],
     );
   }
 
   Widget _buildPromptList() {
     final filteredPrompts = controller.filteredPrompts;
-    
+
     if (filteredPrompts.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Iconsax.message_text,
-              size: 64.r,
-              color: Colors.grey,
-            ),
+            Icon(Iconsax.message_text, size: 64.r, color: Colors.grey),
             SizedBox(height: 16.h),
             Text(
               controller.searchQuery.value.isNotEmpty
@@ -129,10 +135,7 @@ class PromptManagerView extends GetView<PromptManagerController> {
               controller.searchQuery.value.isNotEmpty
                   ? 'Thử tìm kiếm với từ khóa khác'
                   : 'Nhấn nút + để thêm prompt đầu tiên',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey),
             ),
           ],
         ),
@@ -160,18 +163,7 @@ class PromptManagerView extends GetView<PromptManagerController> {
     try {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
-        await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-        Get.snackbar(
-          'Thành công',
-          'Đã mở Google AI Studio',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         Get.snackbar(
           'Lỗi',
@@ -236,11 +228,10 @@ class PromptManagerView extends GetView<PromptManagerController> {
           SizedBox(width: 12.w),
           Expanded(
             child: Text(
-              controller.editingPrompt != null ? 'Sửa Prompt' : 'Thêm Prompt Mới',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              controller.editingPrompt != null
+                  ? 'Sửa Prompt'
+                  : 'Thêm Prompt Mới',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -254,10 +245,7 @@ class PromptManagerView extends GetView<PromptManagerController> {
       children: [
         Text(
           'Tiêu đề *',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 8.h),
         TextFormField(
@@ -281,10 +269,7 @@ class PromptManagerView extends GetView<PromptManagerController> {
       children: [
         Text(
           'Danh mục *',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 8.h),
         TextFormField(
@@ -308,10 +293,7 @@ class PromptManagerView extends GetView<PromptManagerController> {
       children: [
         Text(
           'Mô tả',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 8.h),
         TextFormField(
@@ -335,10 +317,7 @@ class PromptManagerView extends GetView<PromptManagerController> {
       children: [
         Text(
           'Nội dung *',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 8.h),
         TextFormField(
@@ -369,20 +348,22 @@ class PromptManagerView extends GetView<PromptManagerController> {
         SizedBox(width: 12.w),
         Expanded(
           flex: 2,
-          child: Obx(() => ElevatedButton(
-            onPressed: controller.isLoading.value
-                ? null
-                : controller.savePrompt,
-            child: controller.isLoading.value
-                ? SizedBox(
-                    height: 20.h,
-                    width: 20.w,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
+          child: Obx(
+            () => ElevatedButton(
+              onPressed: controller.isLoading.value
+                  ? null
+                  : controller.savePrompt,
+              child: controller.isLoading.value
+                  ? SizedBox(
+                      height: 20.h,
+                      width: 20.w,
+                      child: const CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      controller.editingPrompt != null ? 'Cập nhật' : 'Thêm',
                     ),
-                  )
-                : Text(controller.editingPrompt != null ? 'Cập nhật' : 'Thêm'),
-          )),
+            ),
+          ),
         ),
       ],
     );
@@ -397,10 +378,8 @@ class PromptManagerView extends GetView<PromptManagerController> {
 
     showDialog(
       context: context,
-      builder: (context) => PromptFormDialog(
-        controller: controller,
-        isEditing: prompt != null,
-      ),
+      builder: (context) =>
+          PromptFormDialog(controller: controller, isEditing: prompt != null),
     );
   }
 
@@ -499,7 +478,6 @@ class PromptManagerView extends GetView<PromptManagerController> {
                         ),
                       ],
                     ),
-
                   ],
                 ),
               ),

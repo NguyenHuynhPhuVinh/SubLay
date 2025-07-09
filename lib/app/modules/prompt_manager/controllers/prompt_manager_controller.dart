@@ -27,18 +27,26 @@ class PromptManagerController extends GetxController {
 
   // Getters
   List<PromptModel> get prompts => _promptService.prompts;
-  
+
   List<PromptModel> get filteredPrompts {
     var filtered = prompts.where((prompt) {
-      final matchesCategory = selectedCategory.value == 'All' || 
-                             prompt.category == selectedCategory.value;
-      final matchesSearch = searchQuery.value.isEmpty ||
-                           prompt.title.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-                           prompt.description.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-                           prompt.content.toLowerCase().contains(searchQuery.value.toLowerCase());
+      final matchesCategory =
+          selectedCategory.value == 'All' ||
+          prompt.category == selectedCategory.value;
+      final matchesSearch =
+          searchQuery.value.isEmpty ||
+          prompt.title.toLowerCase().contains(
+            searchQuery.value.toLowerCase(),
+          ) ||
+          prompt.description.toLowerCase().contains(
+            searchQuery.value.toLowerCase(),
+          ) ||
+          prompt.content.toLowerCase().contains(
+            searchQuery.value.toLowerCase(),
+          );
       return matchesCategory && matchesSearch;
     }).toList();
-    
+
     return filtered;
   }
 
@@ -92,7 +100,7 @@ class PromptManagerController extends GetxController {
     isLoading.value = true;
     try {
       final now = DateTime.now();
-      
+
       if (editingPrompt != null) {
         // Update existing prompt
         final updatedPrompt = editingPrompt!.copyWith(
@@ -105,14 +113,6 @@ class PromptManagerController extends GetxController {
         await _promptService.updatePrompt(updatedPrompt);
         clearForm();
         showPromptList.value = true;
-
-        Get.snackbar(
-          'Thành công',
-          'Đã cập nhật prompt',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
       } else {
         // Create new prompt
         final newPrompt = PromptModel(
@@ -127,14 +127,6 @@ class PromptManagerController extends GetxController {
         await _promptService.addPrompt(newPrompt);
         clearForm();
         showPromptList.value = true;
-
-        Get.snackbar(
-          'Thành công',
-          'Đã thêm prompt mới',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
       }
     } catch (e) {
       Get.snackbar(
@@ -171,13 +163,6 @@ class PromptManagerController extends GetxController {
     if (confirmed == true) {
       try {
         await _promptService.deletePrompt(prompt.id);
-        Get.snackbar(
-          'Thành công',
-          'Đã xóa prompt',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
       } catch (e) {
         Get.snackbar(
           'Lỗi',
@@ -190,18 +175,9 @@ class PromptManagerController extends GetxController {
     }
   }
 
-
-
   Future<void> copyPromptToClipboard(PromptModel prompt) async {
     try {
       await Clipboard.setData(ClipboardData(text: prompt.content));
-      Get.snackbar(
-        'Thành công',
-        'Đã copy prompt vào clipboard',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
     } catch (e) {
       Get.snackbar(
         'Lỗi',

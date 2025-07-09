@@ -9,7 +9,8 @@ import '../../../core/services/subtitle_settings_service.dart';
 class SubtitleEditorView extends GetView<SubtitleEditorController> {
   const SubtitleEditorView({Key? key}) : super(key: key);
 
-  SubtitleSettingsService get _subtitleSettings => Get.find<SubtitleSettingsService>();
+  SubtitleSettingsService get _subtitleSettings =>
+      Get.find<SubtitleSettingsService>();
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +23,6 @@ class SubtitleEditorView extends GetView<SubtitleEditorController> {
             icon: const Icon(Iconsax.refresh),
             onPressed: () {
               controller.resetOffset();
-              Get.snackbar(
-                'Reset',
-                'Đã reset subtitle offset về 0ms',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.blue.withOpacity(0.8),
-                colorText: Colors.white,
-              );
             },
             tooltip: 'Reset Offset',
           ),
@@ -71,20 +65,19 @@ class SubtitleEditorView extends GetView<SubtitleEditorController> {
                 const SizedBox(width: 8),
                 const Text(
                   'Điều chỉnh Timing',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
-                Obx(() => Text(
-                  _subtitleSettings.offsetString,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(_subtitleSettings.offsetColor),
-                    fontWeight: FontWeight.bold,
+                Obx(
+                  () => Text(
+                    _subtitleSettings.offsetString,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(_subtitleSettings.offsetColor),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                )),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -114,7 +107,12 @@ class SubtitleEditorView extends GetView<SubtitleEditorController> {
     );
   }
 
-  Widget _buildOffsetButton(String label, int offset, Color color, {bool isReset = false}) {
+  Widget _buildOffsetButton(
+    String label,
+    int offset,
+    Color color, {
+    bool isReset = false,
+  }) {
     return ElevatedButton(
       onPressed: () {
         if (isReset) {
@@ -127,26 +125,13 @@ class SubtitleEditorView extends GetView<SubtitleEditorController> {
         HapticFeedback.lightImpact();
 
         // Show feedback
-        Get.snackbar(
-          'Cài đặt đã lưu',
-          isReset
-              ? 'Đã reset timing về 0ms'
-              : 'Đã điều chỉnh ${offset > 0 ? '+' : ''}${offset}ms',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 1),
-          backgroundColor: color.withOpacity(0.8),
-          colorText: Colors.white,
-        );
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 12),
-      ),
+      child: Text(label, style: const TextStyle(fontSize: 12)),
     );
   }
 
@@ -163,10 +148,7 @@ class SubtitleEditorView extends GetView<SubtitleEditorController> {
                 const SizedBox(width: 8),
                 const Text(
                   'Cài đặt Subtitle Timing',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -176,11 +158,7 @@ class SubtitleEditorView extends GetView<SubtitleEditorController> {
               '• Nếu phụ đề hiển thị chậm hơn âm thanh: dùng nút âm (-)\n'
               '• Nếu phụ đề hiển thị nhanh hơn âm thanh: dùng nút dương (+)\n'
               '• Thay đổi sẽ có hiệu lực ngay lập tức khi xem video',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey,
-                height: 1.4,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
             ),
           ],
         ),
@@ -189,31 +167,29 @@ class SubtitleEditorView extends GetView<SubtitleEditorController> {
   }
 
   Widget _buildStatusInfo() {
-    return Obx(() => Card(
-      color: Colors.blue.withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            const Icon(
-              Iconsax.setting_2,
-              color: Colors.blue,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Offset hiện tại: ${_subtitleSettings.offsetString} • Đã lưu tự động',
-                style: const TextStyle(
-                  color: Colors.blue,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+    return Obx(
+      () => Card(
+        color: Colors.blue.withOpacity(0.1),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              const Icon(Iconsax.setting_2, color: Colors.blue, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Offset hiện tại: ${_subtitleSettings.offsetString} • Đã lưu tự động',
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 }

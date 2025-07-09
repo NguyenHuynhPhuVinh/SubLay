@@ -74,7 +74,6 @@ class VideoInputController extends GetxController {
 
       videoTitle.value = title;
       titleController.text = title;
-
     } catch (e) {
       print('Error fetching video info: $e');
       videoTitle.value = 'YouTube Video';
@@ -88,7 +87,8 @@ class VideoInputController extends GetxController {
   Future<String?> _getVideoTitleFromOEmbed(String url) async {
     try {
       // Use YouTube oEmbed API to get video title
-      final oEmbedUrl = 'https://www.youtube.com/oembed?url=${Uri.encodeComponent(url)}&format=json';
+      final oEmbedUrl =
+          'https://www.youtube.com/oembed?url=${Uri.encodeComponent(url)}&format=json';
 
       final response = await _dio.get(oEmbedUrl);
 
@@ -104,7 +104,6 @@ class VideoInputController extends GetxController {
       if (videoId != null) {
         return 'YouTube Video ($videoId)';
       }
-
     } catch (e) {
       print('Error getting video title from oEmbed: $e');
 
@@ -164,14 +163,6 @@ class VideoInputController extends GetxController {
             print('DEBUG - Error reading file from path: $e');
           }
         }
-
-        Get.snackbar(
-          'Thành công',
-          'Đã tải file SRT: ${file.name}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withOpacity(0.8),
-          colorText: Colors.white,
-        );
       }
     } catch (e) {
       Get.snackbar(
@@ -205,28 +196,6 @@ class VideoInputController extends GetxController {
     // Perform validation and auto-fix
     final result = SrtParser.validateAndFixSrt(content);
     srtValidationResult.value = result;
-
-    // Show summary notification
-    if (result.formatFixesCount > 0) {
-      Get.snackbar(
-        'Phát hiện lỗi định dạng',
-        'Đã tìm thấy ${result.formatFixesCount} lỗi định dạng có thể sửa tự động',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blue.withOpacity(0.8),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
-    } else if (result.timelineErrors.isNotEmpty ||
-        result.silenceGaps.isNotEmpty) {
-      Get.snackbar(
-        'Cảnh báo',
-        'Phát hiện ${result.timelineErrors.length} lỗi timeline và ${result.silenceGaps.length} khoảng lặng',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange.withOpacity(0.8),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
-    }
   }
 
   // Apply auto-fix for format errors
@@ -238,18 +207,8 @@ class VideoInputController extends GetxController {
 
       // Re-validate after applying fix
       _validateSrtContent(result.fixedContent!);
-
-      Get.snackbar(
-        'Thành công',
-        'Đã áp dụng sửa lỗi tự động cho ${result.formatFixesCount} lỗi định dạng',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withOpacity(0.8),
-        colorText: Colors.white,
-      );
     }
   }
-
-
 
   // Clear SRT content
   void clearSrtContent() {
@@ -297,8 +256,8 @@ class VideoInputController extends GetxController {
             title: titleController.text.isNotEmpty
                 ? titleController.text
                 : videoTitle.value.isNotEmpty
-                    ? videoTitle.value
-                    : 'YouTube Video',
+                ? videoTitle.value
+                : 'YouTube Video',
           );
 
           // Save to history service
@@ -307,14 +266,6 @@ class VideoInputController extends GetxController {
           // Clear form and switch back to list view
           _clearForm();
           showVideoList.value = true;
-
-          Get.snackbar(
-            'Thành công',
-            'Đã lưu video vào danh sách',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green.withOpacity(0.8),
-            colorText: Colors.white,
-          );
         } catch (e) {
           Get.snackbar(
             'Lỗi',
@@ -342,8 +293,8 @@ class VideoInputController extends GetxController {
           'title': titleController.text.isNotEmpty
               ? titleController.text
               : videoTitle.value.isNotEmpty
-                  ? videoTitle.value
-                  : 'YouTube Video',
+              ? videoTitle.value
+              : 'YouTube Video',
           'srtContent': srtContent.value,
           'srtFileName': srtFileName.value,
         };
@@ -400,17 +351,25 @@ class VideoInputController extends GetxController {
     showVideoList.value = false; // Switch to input form
   }
 
+  // Clear all videos
+  Future<void> clearAllVideos() async {
+    try {
+      await _historyService.clearHistory();
+    } catch (e) {
+      Get.snackbar(
+        'Lỗi',
+        'Không thể xóa tất cả video: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.8),
+        colorText: Colors.white,
+      );
+    }
+  }
+
   // Delete saved video
   Future<void> deleteSavedVideo(VideoWithSubtitle video) async {
     try {
       await _historyService.removeVideo(video.videoId);
-      Get.snackbar(
-        'Thành công',
-        'Đã xóa video khỏi danh sách',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withOpacity(0.8),
-        colorText: Colors.white,
-      );
     } catch (e) {
       Get.snackbar(
         'Lỗi',

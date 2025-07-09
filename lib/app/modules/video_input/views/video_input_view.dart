@@ -21,17 +21,31 @@ class VideoInputView extends GetView<VideoInputController> {
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         actions: [
-          Obx(() => IconButton(
-            icon: Icon(
-              controller.showVideoList.value
-                ? Iconsax.add_circle
-                : Iconsax.arrow_left_2,
-            ),
-            onPressed: controller.toggleView,
-            tooltip: controller.showVideoList.value
-                ? 'Thêm video mới'
-                : 'Quay lại danh sách',
-          )),
+          Obx(() => controller.showVideoList.value
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Clear all button
+                    if (controller.savedVideos.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Iconsax.trash),
+                        onPressed: () => _showClearAllDialog(),
+                        tooltip: 'Xóa tất cả video',
+                        color: Colors.red,
+                      ),
+                    // Add new video button
+                    IconButton(
+                      icon: const Icon(Iconsax.add_circle),
+                      onPressed: controller.toggleView,
+                      tooltip: 'Thêm video mới',
+                    ),
+                  ],
+                )
+              : IconButton(
+                  icon: const Icon(Iconsax.arrow_left_2),
+                  onPressed: controller.toggleView,
+                  tooltip: 'Quay lại danh sách',
+                )),
         ],
       ),
       body: Obx(() => controller.showVideoList.value
@@ -764,6 +778,38 @@ class VideoInputView extends GetView<VideoInputController> {
               Navigator.of(Get.context!).pop();
             },
             child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+      barrierDismissible: true,
+    );
+  }
+
+  // Show clear all dialog
+  void _showClearAllDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Xóa tất cả video'),
+        content: Text(
+          'Bạn có chắc muốn xóa tất cả ${controller.savedVideos.length} video khỏi danh sách?\n\nHành động này không thể hoàn tác.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(Get.context!).pop(),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () {
+              controller.clearAllVideos();
+              Navigator.of(Get.context!).pop();
+            },
+            child: const Text(
+              'Xóa tất cả',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
