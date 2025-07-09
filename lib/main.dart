@@ -9,6 +9,7 @@ import 'app/data/models/prompt_model.dart';
 import 'app/data/services/video_history_service.dart';
 import 'app/data/services/prompt_service.dart';
 import 'app/data/services/app_settings_service.dart';
+import 'app/core/services/subtitle_settings_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,7 @@ void main() async {
   Get.put(VideoHistoryService(), permanent: true);
   Get.put(PromptService(), permanent: true);
   Get.put(AppSettingsService(), permanent: true);
+  Get.put(SubtitleSettingsService(), permanent: true);
 
   runApp(const DuTupSRTApp());
 }

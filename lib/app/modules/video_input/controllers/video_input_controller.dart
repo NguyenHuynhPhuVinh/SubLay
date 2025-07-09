@@ -161,6 +161,40 @@ class VideoInputController extends GetxController {
     }
   }
 
+  // Optimize line breaking for better display
+  void optimizeLineBreaking() {
+    final currentContent = srtContent.value;
+    if (currentContent.trim().isEmpty) return;
+
+    // Process with smart line breaking
+    final result = SrtParser.processAndOptimizeSrt(currentContent, maxLineLength: 35);
+
+    if (result.fixedContent != null) {
+      srtContent.value = result.fixedContent!;
+      srtTextController.text = result.fixedContent!;
+
+      // Re-validate after optimization
+      _validateSrtContent(result.fixedContent!);
+
+      Get.snackbar(
+        'Tối ưu thành công',
+        'Đã tối ưu ngắt dòng cho phụ đề hiển thị tốt hơn',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.purple.withOpacity(0.8),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    } else {
+      Get.snackbar(
+        'Lỗi',
+        'Không thể tối ưu nội dung SRT',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.8),
+        colorText: Colors.white,
+      );
+    }
+  }
+
   // Clear SRT content
   void clearSrtContent() {
     srtContent.value = '';

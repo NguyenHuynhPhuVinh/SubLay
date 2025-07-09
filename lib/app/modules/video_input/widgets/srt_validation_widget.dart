@@ -6,11 +6,13 @@ import '../../../core/utils/srt_parser.dart';
 class SrtValidationWidget extends StatelessWidget {
   final SrtValidationResult validationResult;
   final VoidCallback? onFixApplied;
+  final VoidCallback? onOptimizeLineBreaking;
 
   const SrtValidationWidget({
     Key? key,
     required this.validationResult,
     this.onFixApplied,
+    this.onOptimizeLineBreaking,
   }) : super(key: key);
 
   @override
@@ -20,23 +22,31 @@ class SrtValidationWidget extends StatelessWidget {
         validationResult.silenceGaps.isEmpty) {
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.green.withOpacity(0.3)),
-        ),
-        child: const Row(
+        child: Column(
           children: [
-            Icon(Iconsax.tick_circle, color: Colors.green, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'File SRT hợp lệ ✓',
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.w500,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Iconsax.tick_circle, color: Colors.green, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'File SRT hợp lệ ✓',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: 8),
+            _buildOptimizeButton(),
           ],
         ),
       );
@@ -82,7 +92,11 @@ class SrtValidationWidget extends StatelessWidget {
               '${validationResult.silenceGaps.length} khoảng',
             ),
             _buildErrorList(validationResult.silenceGaps, Colors.purple),
+            const SizedBox(height: 12),
           ],
+
+          // Optimize button - always show
+          _buildOptimizeButton(),
         ],
       ),
     );
@@ -211,6 +225,26 @@ class SrtValidationWidget extends StatelessWidget {
         label: const Text('Áp dụng sửa lỗi tự động'),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptimizeButton() {
+    if (onOptimizeLineBreaking == null) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onOptimizeLineBreaking,
+        icon: const Icon(Iconsax.text, size: 18),
+        label: const Text('Tối ưu ngắt dòng thông minh'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.purple,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),

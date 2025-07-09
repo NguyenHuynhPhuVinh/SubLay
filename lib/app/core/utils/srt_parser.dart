@@ -161,6 +161,105 @@ class SrtParser {
     return buffer.toString();
   }
 
+  // Generate SRT with smart line breaking
+  static String generateSrtWithSmartLineBreaking(List<SrtSubtitle> subtitles, {int maxLineLength = 35}) {
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < subtitles.length; i++) {
+      final subtitle = subtitles[i];
+      final smartText = _applySmartLineBreaking(subtitle.text, maxLineLength);
+
+      buffer.writeln(subtitle.index);
+      buffer.writeln('${formatTime(subtitle.startTime)} --> ${formatTime(subtitle.endTime)}');
+      buffer.writeln(smartText);
+
+      if (i < subtitles.length - 1) {
+        buffer.writeln();
+      }
+    }
+
+    return buffer.toString();
+  }
+
+  // Apply smart line breaking to subtitle text
+  static String _applySmartLineBreaking(String text, int maxLineLength) {
+    // Tách các dòng hiện có (do SRT định dạng)
+    final existingLines = text.split('\n');
+    final processedLines = <String>[];
+
+    for (final line in existingLines) {
+      if (line.trim().isEmpty) {
+        processedLines.add('');
+        continue;
+      }
+
+      // Nếu dòng ngắn hơn maxLineLength, giữ nguyên
+      if (line.length <= maxLineLength) {
+        processedLines.add(line);
+        continue;
+      }
+
+      // Ngắt dòng thông minh
+      final brokenLines = _breakLongLine(line, maxLineLength);
+      processedLines.addAll(brokenLines);
+    }
+
+    return processedLines.join('\n');
+  }
+
+  // Break long line into multiple lines intelligently
+  static List<String> _breakLongLine(String line, int maxLineLength) {
+    final words = line.split(' ');
+    final lines = <String>[];
+    String currentLine = '';
+
+    for (final word in words) {
+      // Nếu từ đơn lẻ quá dài, cắt cứng
+      if (word.length > maxLineLength) {
+        if (currentLine.isNotEmpty) {
+          lines.add(currentLine.trim());
+          currentLine = '';
+        }
+
+        // Cắt từ dài thành nhiều phần
+        final chunks = _breakLongWord(word, maxLineLength);
+        lines.addAll(chunks.take(chunks.length - 1));
+        currentLine = chunks.last;
+        continue;
+      }
+
+      // Kiểm tra nếu thêm từ này có vượt quá độ dài
+      final testLine = currentLine.isEmpty ? word : '$currentLine $word';
+
+      if (testLine.length <= maxLineLength) {
+        currentLine = testLine;
+      } else {
+        // Xuống dòng
+        if (currentLine.isNotEmpty) {
+          lines.add(currentLine.trim());
+        }
+        currentLine = word;
+      }
+    }
+
+    // Thêm dòng cuối
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine.trim());
+    }
+
+    return lines.isEmpty ? [''] : lines;
+  }
+
+  // Break very long word into chunks
+  static List<String> _breakLongWord(String word, int maxLength) {
+    final chunks = <String>[];
+    for (int i = 0; i < word.length; i += maxLength) {
+      final end = (i + maxLength < word.length) ? i + maxLength : word.length;
+      chunks.add(word.substring(i, end));
+    }
+    return chunks;
+  }
+
   static String findCurrentSubtitle(List<SrtSubtitle> subtitles, Duration currentTime) {
     for (final subtitle in subtitles) {
       if (currentTime >= subtitle.startTime && currentTime <= subtitle.endTime) {
@@ -185,6 +284,56 @@ class SrtParser {
         .replaceAll(RegExp(r'\{[^}]*\}'), '') // Remove formatting tags
         .replaceAll(RegExp(r'\s+'), ' ') // Normalize whitespace
         .trim();
+  }
+
+  // Process SRT content with smart line breaking and validation
+  static SrtValidationResult processAndOptimizeSrt(String content, {int maxLineLength = 35}) {
+    if (content.trim().isEmpty) {
+      return SrtValidationResult(
+        isValid: false,
+        formatErrors: ['Nội dung SRT trống'],
+        timelineErrors: [],
+        silenceGaps: [],
+      );
+    }
+
+    // Step 1: Parse original content
+    final subtitles = parse(content);
+    if (subtitles.isEmpty) {
+      return SrtValidationResult(
+        isValid: false,
+        formatErrors: ['Không thể parse nội dung SRT'],
+        timelineErrors: [],
+        silenceGaps: [],
+      );
+    }
+
+    // Step 2: Apply smart line breaking
+    final optimizedSubtitles = subtitles.map((subtitle) {
+      final optimizedText = _applySmartLineBreaking(subtitle.text, maxLineLength);
+      return SrtSubtitle(
+        index: subtitle.index,
+        startTime: subtitle.startTime,
+        endTime: subtitle.endTime,
+        text: optimizedText,
+      );
+    }).toList();
+
+    // Step 3: Generate optimized content
+    final optimizedContent = generateSrt(optimizedSubtitles);
+
+    // Step 4: Validate the optimized content
+    final validationResult = validateAndFixSrt(optimizedContent);
+
+    // Return result with optimized content
+    return SrtValidationResult(
+      isValid: validationResult.isValid,
+      formatErrors: validationResult.formatErrors,
+      timelineErrors: validationResult.timelineErrors,
+      silenceGaps: validationResult.silenceGaps,
+      fixedContent: optimizedContent,
+      formatFixesCount: validationResult.formatFixesCount + 1, // +1 for line breaking optimization
+    );
   }
 
   // Validate and fix SRT content

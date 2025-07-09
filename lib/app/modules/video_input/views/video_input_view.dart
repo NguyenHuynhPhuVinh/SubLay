@@ -300,6 +300,27 @@ class VideoInputView extends GetView<VideoInputController> {
               ? SrtValidationWidget(
                   validationResult: controller.srtValidationResult.value!,
                   onFixApplied: controller.applyAutoFix,
+                  onOptimizeLineBreaking: controller.optimizeLineBreaking,
+                )
+              : const SizedBox()),
+
+          // Optimize button when no validation result but has content
+          Obx(() => controller.srtValidationResult.value == null &&
+                    controller.srtContent.value.trim().isNotEmpty
+              ? Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: controller.optimizeLineBreaking,
+                    icon: const Icon(Iconsax.text, size: 18),
+                    label: const Text('Tối ưu ngắt dòng thông minh'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
+                  ),
                 )
               : const SizedBox()),
         ],

@@ -4,6 +4,7 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/utils/srt_parser.dart';
+import '../../../core/services/subtitle_settings_service.dart';
 import '../../../data/services/video_history_service.dart';
 import '../../../data/services/app_settings_service.dart';
 import '../../../data/models/video_with_subtitle.dart';
@@ -12,6 +13,7 @@ class VideoPlayerController extends GetxController {
   // Services
   final VideoHistoryService _historyService = Get.find<VideoHistoryService>();
   final AppSettingsService _settingsService = Get.find<AppSettingsService>();
+  final SubtitleSettingsService _subtitleSettings = Get.find<SubtitleSettingsService>();
 
   // YouTube Player Controller
   YoutubePlayerController? youtubeController;
@@ -174,21 +176,29 @@ class VideoPlayerController extends GetxController {
 
   void _startPositionTimer() {
     _positionTimer?.cancel();
-    _positionTimer = Timer.periodic(const Duration(milliseconds: 500), (
+    // Giảm interval xuống 100ms để phụ đề responsive hơn
+    _positionTimer = Timer.periodic(const Duration(milliseconds: 100), (
       timer,
     ) async {
       if (youtubeController != null) {
         try {
           final position = await youtubeController!.currentTime;
-          final duration = await youtubeController!.duration;
-          final playerState = await youtubeController!.playerState;
 
-          currentPosition.value = Duration(seconds: position.toInt());
-          totalDuration.value = Duration(seconds: duration.toInt());
-          isPlaying.value = playerState == PlayerState.playing;
-          isPlayerReady.value = playerState != PlayerState.unknown;
+          // Giữ độ chính xác millisecond cho phụ đề
+          final precisePosition = Duration(milliseconds: (position * 1000).toInt());
+          currentPosition.value = precisePosition;
 
-          // Update subtitle based on current position
+          // Chỉ cập nhật duration và player state mỗi 500ms để tối ưu performance
+          if (timer.tick % 5 == 0) {
+            final duration = await youtubeController!.duration;
+            final playerState = await youtubeController!.playerState;
+
+            totalDuration.value = Duration(seconds: duration.toInt());
+            isPlaying.value = playerState == PlayerState.playing;
+            isPlayerReady.value = playerState != PlayerState.unknown;
+          }
+
+          // Update subtitle based on current position với độ chính xác cao
           _updateCurrentSubtitle();
 
         } catch (e) {
@@ -205,15 +215,51 @@ class VideoPlayerController extends GetxController {
     }
   }
 
+  // Cache để tối ưu tìm kiếm phụ đề
+  int _lastSubtitleIndex = -1;
+
   void _updateCurrentSubtitle() {
     if (subtitles.isEmpty) return;
 
-    // Use SrtParser helper method to find current subtitle
-    currentSubtitle.value = SrtParser.findCurrentSubtitle(
-      subtitles,
-      currentPosition.value,
+    // Áp dụng subtitle offset từ settings service
+    final adjustedTime = Duration(
+      milliseconds: currentPosition.value.inMilliseconds + _subtitleSettings.subtitleOffset.value
     );
+
+    // Tối ưu: kiểm tra subtitle hiện tại trước
+    if (_lastSubtitleIndex >= 0 && _lastSubtitleIndex < subtitles.length) {
+      final currentSub = subtitles[_lastSubtitleIndex];
+      if (adjustedTime >= currentSub.startTime && adjustedTime <= currentSub.endTime) {
+        // Vẫn trong subtitle hiện tại, không cần tìm lại
+        return;
+      }
+    }
+
+    // Tìm subtitle mới với tối ưu hóa
+    String newSubtitle = '';
+    for (int i = 0; i < subtitles.length; i++) {
+      final subtitle = subtitles[i];
+      if (adjustedTime >= subtitle.startTime && adjustedTime <= subtitle.endTime) {
+        newSubtitle = subtitle.text;
+        _lastSubtitleIndex = i;
+        break;
+      }
+    }
+
+    // Chỉ cập nhật nếu có thay đổi để tránh rebuild không cần thiết
+    if (currentSubtitle.value != newSubtitle) {
+      currentSubtitle.value = newSubtitle;
+    }
+
+    // Reset cache nếu không tìm thấy subtitle
+    if (newSubtitle.isEmpty) {
+      _lastSubtitleIndex = -1;
+    }
   }
+
+
+
+
 
   void togglePlayPause() async {
     if (youtubeController != null) {
