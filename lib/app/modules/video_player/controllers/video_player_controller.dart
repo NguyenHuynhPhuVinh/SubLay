@@ -49,7 +49,6 @@ class VideoPlayerController extends GetxController {
 
     // Get arguments from navigation
     final args = Get.arguments as Map<String, dynamic>?;
-    print('DEBUG - VideoPlayer arguments: $args');
 
     if (args != null) {
       videoId.value = args['videoId'] ?? '';
@@ -57,44 +56,120 @@ class VideoPlayerController extends GetxController {
       srtContent.value = args['srtContent'] ?? '';
       srtFileName.value = args['srtFileName'] ?? '';
 
-      print('DEBUG - VideoPlayer data:');
-      print('  - videoId: ${videoId.value}');
-      print('  - youtubeUrl: ${youtubeUrl.value}');
-      print('  - srtContent length: ${srtContent.value.length}');
-      print('  - srtFileName: ${srtFileName.value}');
-
       if (videoId.value.isNotEmpty) {
         _initializePlayer();
         _parseSrtContent();
         _createVideoModel();
-      } else {
-        print('ERROR - No videoId provided');
       }
-    } else {
-      print('ERROR - No arguments provided to VideoPlayer');
     }
   }
 
   void _initializePlayer() {
     if (videoId.value.isNotEmpty) {
-      youtubeController = YoutubePlayerController.fromVideoId(
-        videoId: videoId.value,
-        autoPlay: true,
-        params: const YoutubePlayerParams(
-          mute: false,
-          enableCaption: false,
-          enableJavaScript: true,
-          loop: false,
-          playsInline: true,
-          showControls: true,
-          showFullscreenButton: false,
-          strictRelatedVideos: false,
-        ),
-      );
+      try {
+        youtubeController = YoutubePlayerController(
+          params: const YoutubePlayerParams(
+            mute: false,
+            enableCaption: false,
+            enableJavaScript: true,
+            loop: false,
+            playsInline: true,
+            showControls: true,
+            showFullscreenButton: false,
+            strictRelatedVideos: false,
+          ),
+        );
 
-      // Start position timer for iframe player
-      _startPositionTimer();
+        // Load video after controller initialization
+        _loadVideoDelayed();
+
+        // Add listener for player state changes and errors
+        youtubeController!.listen((event) {
+          // Check if there's an error in the player state
+          if (event.hasError) {
+            _handlePlayerError(null);
+          }
+        });
+
+        // Start position timer for iframe player
+        _startPositionTimer();
+      } catch (e) {
+        Get.snackbar(
+          'Lỗi',
+          'Không thể khởi tạo trình phát video: $e',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.8),
+          colorText: Colors.white,
+        );
+      }
     }
+  }
+
+  void _loadVideoDelayed() {
+    // Load video after a delay to ensure controller is fully initialized
+    Future.delayed(const Duration(milliseconds: 500), () async {
+      try {
+        if (youtubeController != null && videoId.value.isNotEmpty) {
+          await youtubeController!.loadVideoById(videoId: videoId.value);
+          // Auto-play after loading
+          Future.delayed(const Duration(milliseconds: 300), () async {
+            try {
+              await youtubeController!.playVideo();
+            } catch (e) {
+              // Silent fail for auto-play
+            }
+          });
+        }
+      } catch (e) {
+        // If loading fails, try alternative approach
+        _tryAlternativeLoad();
+      }
+    });
+  }
+
+  void _tryAlternativeLoad() {
+    // Alternative loading method for problematic video IDs
+    Future.delayed(const Duration(milliseconds: 1000), () async {
+      try {
+        if (youtubeController != null) {
+          // Try reloading with the same video ID but different timing
+          await youtubeController!.loadVideoById(videoId: videoId.value);
+        }
+      } catch (e) {
+        // Silent fail for alternative load
+      }
+    });
+  }
+
+  void _handlePlayerError(String? errorCode) {
+    String errorMessage = 'Lỗi không xác định';
+
+    switch (errorCode) {
+      case '2':
+        errorMessage = 'Video ID không hợp lệ';
+        break;
+      case '5':
+        errorMessage = 'Video không hỗ trợ phát trên HTML5 player';
+        break;
+      case '100':
+        errorMessage = 'Video không tìm thấy hoặc đã bị xóa';
+        break;
+      case '101':
+      case '150':
+        errorMessage = 'Video bị hạn chế hoặc không khả dụng ở khu vực của bạn';
+        break;
+      default:
+        errorMessage = 'Không thể phát video (Mã lỗi: $errorCode)';
+    }
+
+    Get.snackbar(
+      'Lỗi phát video',
+      errorMessage,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red.withOpacity(0.8),
+      colorText: Colors.white,
+      duration: const Duration(seconds: 5),
+    );
   }
 
   void _startPositionTimer() {
@@ -115,8 +190,9 @@ class VideoPlayerController extends GetxController {
 
           // Update subtitle based on current position
           _updateCurrentSubtitle();
+
         } catch (e) {
-          print('Error getting player state: $e');
+          // Silent error handling for position updates
         }
       }
     });
@@ -154,9 +230,7 @@ class VideoPlayerController extends GetxController {
             await youtubeController!.seekTo(
               seconds: rewindPosition.inSeconds.toDouble(),
             );
-            print(
-              'Rewound 5s before play: ${rewindPosition.inSeconds}s (from ${currentSeconds}s)',
-            );
+            // Rewound 5s before play
           }
 
           await youtubeController!.playVideo();
@@ -165,7 +239,7 @@ class VideoPlayerController extends GetxController {
         // Reset controls timer when user interacts
         _resetControlsTimer();
       } catch (e) {
-        print('Error toggling play/pause: $e');
+        // Silent error handling
       }
     }
   }
@@ -178,7 +252,7 @@ class VideoPlayerController extends GetxController {
         // Reset controls timer when user interacts
         _resetControlsTimer();
       } catch (e) {
-        print('Error seeking to position: $e');
+        // Silent error handling
       }
     }
   }
@@ -200,7 +274,7 @@ class VideoPlayerController extends GetxController {
         // Reset controls timer when user interacts
         _resetControlsTimer();
       } catch (e) {
-        print('Error seeking relative: $e');
+        // Silent error handling
       }
     }
   }
@@ -273,12 +347,6 @@ class VideoPlayerController extends GetxController {
     required String srtContent,
     required String srtFileName,
   }) {
-    print('DEBUG - setVideoData called with:');
-    print('  - videoId: $videoId');
-    print('  - youtubeUrl: $youtubeUrl');
-    print('  - srtContent length: ${srtContent.length}');
-    print('  - srtFileName: $srtFileName');
-
     this.videoId.value = videoId;
     this.youtubeUrl.value = youtubeUrl;
     this.srtContent.value = srtContent;
@@ -310,9 +378,6 @@ class VideoPlayerController extends GetxController {
   }
 
   void goBack() {
-    print('VideoPlayerController.goBack() called');
-    print('Current route: ${Get.currentRoute}');
-
     // Restore portrait orientation when going back
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -326,14 +391,11 @@ class VideoPlayerController extends GetxController {
     // Use Navigator.pop instead of Get.back to avoid GetX SnackbarController error
     try {
       if (Get.key.currentState?.canPop() == true) {
-        print('Using Navigator.pop()');
         Get.key.currentState?.pop();
       } else {
-        print('Using Get.offAllNamed to main screen');
         Get.offAllNamed('/main');
       }
     } catch (e) {
-      print('Navigation error: $e');
       // Fallback to main screen
       Get.offAllNamed('/main');
     }
@@ -341,7 +403,6 @@ class VideoPlayerController extends GetxController {
 
   @override
   void onClose() {
-    print('VideoPlayerController.onClose() called');
     // Restore portrait orientation when controller is disposed
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
