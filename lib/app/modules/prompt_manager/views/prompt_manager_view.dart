@@ -18,30 +18,30 @@ class PromptManagerView extends GetView<PromptManagerController> {
       appBar: AppBar(
         title: const Text('Quản lý Prompt AI'),
         centerTitle: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         actions: [
           IconButton(
             icon: const Icon(Iconsax.global),
             tooltip: 'Mở Google AI Studio',
             onPressed: () => _openAIStudio(),
           ),
-          IconButton(
-            icon: const Icon(Iconsax.add),
-            onPressed: () => _showPromptForm(context),
-          ),
+          Obx(() => IconButton(
+            icon: Icon(
+              controller.showPromptList.value
+                ? Iconsax.add_circle
+                : Iconsax.arrow_left_2,
+            ),
+            onPressed: controller.toggleView,
+            tooltip: controller.showPromptList.value
+                ? 'Thêm prompt mới'
+                : 'Quay lại danh sách',
+          )),
         ],
       ),
-      body: Column(
-        children: [
-          _buildSearchAndFilter(),
-          Expanded(
-            child: Obx(() => _buildPromptList()),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showPromptForm(context),
-        child: const Icon(Iconsax.add),
-      ),
+      body: Obx(() => controller.showPromptList.value
+          ? _buildPromptListView()
+          : _buildPromptFormView()),
     );
   }
 
@@ -85,6 +85,18 @@ class PromptManagerView extends GetView<PromptManagerController> {
           )),
         ],
       ),
+    );
+  }
+
+  // Build prompt list view
+  Widget _buildPromptListView() {
+    return Column(
+      children: [
+        _buildSearchAndFilter(),
+        Expanded(
+          child: Obx(() => _buildPromptList()),
+        ),
+      ],
     );
   }
 
@@ -135,7 +147,7 @@ class PromptManagerView extends GetView<PromptManagerController> {
         return PromptCard(
           prompt: prompt,
           onTap: () => _showPromptDetail(context, prompt),
-          onEdit: () => _showPromptForm(context, prompt: prompt),
+          onEdit: () => controller.showEditPromptForm(prompt),
           onDelete: () => controller.deletePrompt(prompt),
           onCopy: () => controller.copyPromptToClipboard(prompt),
         );
@@ -180,6 +192,200 @@ class PromptManagerView extends GetView<PromptManagerController> {
         duration: const Duration(seconds: 3),
       );
     }
+  }
+
+  // Build prompt form view
+  Widget _buildPromptFormView() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.w),
+      child: Form(
+        key: controller.formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildFormHeader(),
+            SizedBox(height: 24.h),
+            _buildTitleField(),
+            SizedBox(height: 16.h),
+            _buildCategoryField(),
+            SizedBox(height: 16.h),
+            _buildDescriptionField(),
+            SizedBox(height: 16.h),
+            _buildContentField(),
+            SizedBox(height: 32.h),
+            _buildFormActions(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormHeader() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Theme.of(Get.context!).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            controller.editingPrompt != null ? Iconsax.edit : Iconsax.add,
+            size: 24.r,
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              controller.editingPrompt != null ? 'Sửa Prompt' : 'Thêm Prompt Mới',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitleField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Tiêu đề *',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: controller.titleController,
+          validator: controller.validateTitle,
+          decoration: InputDecoration(
+            hintText: 'Nhập tiêu đề prompt...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            prefixIcon: const Icon(Iconsax.text),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Danh mục *',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: controller.categoryController,
+          validator: controller.validateCategory,
+          decoration: InputDecoration(
+            hintText: 'Nhập danh mục...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            prefixIcon: const Icon(Iconsax.category),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDescriptionField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Mô tả',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: controller.descriptionController,
+          maxLines: 2,
+          decoration: InputDecoration(
+            hintText: 'Nhập mô tả ngắn...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            prefixIcon: const Icon(Iconsax.document_text),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContentField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Nội dung *',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: controller.contentController,
+          validator: controller.validateContent,
+          maxLines: 10,
+          decoration: InputDecoration(
+            hintText: 'Nhập nội dung prompt...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            alignLabelWithHint: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: controller.toggleView,
+            child: const Text('Hủy'),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          flex: 2,
+          child: Obx(() => ElevatedButton(
+            onPressed: controller.isLoading.value
+                ? null
+                : controller.savePrompt,
+            child: controller.isLoading.value
+                ? SizedBox(
+                    height: 20.h,
+                    width: 20.w,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(controller.editingPrompt != null ? 'Cập nhật' : 'Thêm'),
+          )),
+        ),
+      ],
+    );
   }
 
   void _showPromptForm(BuildContext context, {PromptModel? prompt}) {
@@ -285,7 +491,7 @@ class PromptManagerView extends GetView<PromptManagerController> {
                           child: ElevatedButton.icon(
                             onPressed: () {
                               Get.back();
-                              _showPromptForm(context, prompt: prompt);
+                              controller.showEditPromptForm(prompt);
                             },
                             icon: const Icon(Iconsax.edit),
                             label: const Text('Sửa'),

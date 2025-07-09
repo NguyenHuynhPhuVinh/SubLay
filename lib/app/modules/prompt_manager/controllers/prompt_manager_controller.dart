@@ -11,6 +11,7 @@ class PromptManagerController extends GetxController {
   final selectedCategory = 'All'.obs;
   final searchQuery = ''.obs;
   final isLoading = false.obs;
+  final showPromptList = true.obs;
 
   // Form controllers
   final titleController = TextEditingController();
@@ -103,11 +104,7 @@ class PromptManagerController extends GetxController {
         );
         await _promptService.updatePrompt(updatedPrompt);
         clearForm();
-
-        // Close dialog/bottom sheet
-        if (Get.isDialogOpen == true) {
-          Get.back();
-        }
+        showPromptList.value = true;
 
         Get.snackbar(
           'Thành công',
@@ -129,11 +126,7 @@ class PromptManagerController extends GetxController {
         );
         await _promptService.addPrompt(newPrompt);
         clearForm();
-
-        // Close dialog/bottom sheet
-        if (Get.isDialogOpen == true) {
-          Get.back();
-        }
+        showPromptList.value = true;
 
         Get.snackbar(
           'Thành công',
@@ -245,5 +238,25 @@ class PromptManagerController extends GetxController {
       return 'Vui lòng nhập danh mục';
     }
     return null;
+  }
+
+  // Toggle between prompt list and form view
+  void toggleView() {
+    showPromptList.value = !showPromptList.value;
+    if (showPromptList.value) {
+      clearForm();
+    }
+  }
+
+  // Show form for adding new prompt
+  void showAddPromptForm() {
+    clearForm();
+    showPromptList.value = false;
+  }
+
+  // Show form for editing prompt
+  void showEditPromptForm(PromptModel prompt) {
+    editPrompt(prompt);
+    showPromptList.value = false;
   }
 }
