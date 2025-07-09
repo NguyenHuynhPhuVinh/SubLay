@@ -2,19 +2,39 @@ import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import '../../../core/utils/srt_parser.dart';
+import '../../../data/services/video_history_service.dart';
+import '../../../data/models/video_with_subtitle.dart';
 
 class VideoInputController extends GetxController {
+  // Services
+  late VideoHistoryService _historyService;
+  final Dio _dio = Dio();
+
   // Observable variables
   final youtubeUrl = ''.obs;
+  final videoTitle = ''.obs;
   final srtContent = ''.obs;
   final srtFileName = ''.obs;
   final isLoading = false.obs;
   final isValidUrl = false.obs;
+  final showVideoList = true.obs;
+  final searchQuery = ''.obs;
+  final isLoadingVideoInfo = false.obs;
 
   // Text controllers
   final urlController = TextEditingController();
+  final titleController = TextEditingController();
   final srtTextController = TextEditingController();
+  final searchController = TextEditingController();
+
+  // Video management
+  List<VideoWithSubtitle> get savedVideos => _historyService.videos;
+  List<VideoWithSubtitle> get filteredVideos {
+    if (searchQuery.value.isEmpty) return savedVideos;
+    return _historyService.searchVideos(searchQuery.value);
+  }
 
   // Validate YouTube URL
   void validateYouTubeUrl(String url) {
@@ -27,6 +47,74 @@ class VideoInputController extends GetxController {
     );
 
     isValidUrl.value = youtubeRegex.hasMatch(url) && url.isNotEmpty;
+
+    // Fetch video info if URL is valid
+    if (isValidUrl.value) {
+      _fetchVideoInfo(url);
+    } else {
+      videoTitle.value = '';
+      titleController.clear();
+    }
+  }
+
+  // Fetch video information from YouTube
+  Future<void> _fetchVideoInfo(String url) async {
+    final videoId = extractVideoId(url);
+    if (videoId == null) return;
+
+    try {
+      isLoadingVideoInfo.value = true;
+
+      // Simulate fetching video title (in real app, you would use YouTube API)
+      // For now, we'll extract from the URL or use a placeholder
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Try to get title from YouTube oEmbed API (simple approach)
+      final title = await _getVideoTitleFromOEmbed(url) ?? 'YouTube Video';
+
+      videoTitle.value = title;
+      titleController.text = title;
+
+    } catch (e) {
+      print('Error fetching video info: $e');
+      videoTitle.value = 'YouTube Video';
+      titleController.text = 'YouTube Video';
+    } finally {
+      isLoadingVideoInfo.value = false;
+    }
+  }
+
+  // Get video title from YouTube oEmbed API
+  Future<String?> _getVideoTitleFromOEmbed(String url) async {
+    try {
+      // Use YouTube oEmbed API to get video title
+      final oEmbedUrl = 'https://www.youtube.com/oembed?url=${Uri.encodeComponent(url)}&format=json';
+
+      final response = await _dio.get(oEmbedUrl);
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data is Map<String, dynamic> && data.containsKey('title')) {
+          return data['title'] as String;
+        }
+      }
+
+      // Fallback if API fails
+      final videoId = extractVideoId(url);
+      if (videoId != null) {
+        return 'YouTube Video ($videoId)';
+      }
+
+    } catch (e) {
+      print('Error getting video title from oEmbed: $e');
+
+      // Fallback if API fails
+      final videoId = extractVideoId(url);
+      if (videoId != null) {
+        return 'YouTube Video ($videoId)';
+      }
+    }
+    return null;
   }
 
   // Extract YouTube video ID from URL
@@ -190,6 +278,58 @@ class VideoInputController extends GetxController {
     return hasValidUrl && hasSrtContent;
   }
 
+  // Save video with subtitle
+  Future<void> saveVideoWithSubtitle() async {
+    if (canPlayVideo()) {
+      final videoId = extractVideoId(youtubeUrl.value);
+      if (videoId != null) {
+        try {
+          isLoading.value = true;
+
+          // Create video model
+          final video = VideoWithSubtitle.fromInput(
+            videoId: videoId,
+            youtubeUrl: youtubeUrl.value,
+            srtContent: srtContent.value,
+            srtFileName: srtFileName.value.isNotEmpty
+                ? srtFileName.value
+                : 'Phụ đề tùy chỉnh',
+            title: titleController.text.isNotEmpty
+                ? titleController.text
+                : videoTitle.value.isNotEmpty
+                    ? videoTitle.value
+                    : 'YouTube Video',
+          );
+
+          // Save to history service
+          await _historyService.addOrUpdateVideo(video);
+
+          // Clear form and switch back to list view
+          _clearForm();
+          showVideoList.value = true;
+
+          Get.snackbar(
+            'Thành công',
+            'Đã lưu video vào danh sách',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.withOpacity(0.8),
+            colorText: Colors.white,
+          );
+        } catch (e) {
+          Get.snackbar(
+            'Lỗi',
+            'Không thể lưu video: $e',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.withOpacity(0.8),
+            colorText: Colors.white,
+          );
+        } finally {
+          isLoading.value = false;
+        }
+      }
+    }
+  }
+
   // Navigate to video player
   void playVideoWithSubtitles() {
     if (canPlayVideo()) {
@@ -227,9 +367,91 @@ class VideoInputController extends GetxController {
     }
   }
 
+  // Play saved video
+  void playSavedVideo(VideoWithSubtitle video) {
+    final arguments = {
+      'videoId': video.videoId,
+      'youtubeUrl': video.youtubeUrl,
+      'srtContent': video.srtContent,
+      'srtFileName': video.srtFileName,
+    };
+    Get.toNamed('/video_player', arguments: arguments);
+  }
+
+  // Edit saved video
+  void editSavedVideo(VideoWithSubtitle video) {
+    youtubeUrl.value = video.youtubeUrl;
+    urlController.text = video.youtubeUrl;
+    videoTitle.value = video.title;
+    titleController.text = video.title;
+    srtContent.value = video.srtContent;
+    srtTextController.text = video.srtContent;
+    srtFileName.value = video.srtFileName;
+
+    validateYouTubeUrl(video.youtubeUrl);
+    _validateSrtContent(video.srtContent);
+
+    showVideoList.value = false; // Switch to input form
+  }
+
+  // Delete saved video
+  Future<void> deleteSavedVideo(VideoWithSubtitle video) async {
+    try {
+      await _historyService.removeVideo(video.videoId);
+      Get.snackbar(
+        'Thành công',
+        'Đã xóa video khỏi danh sách',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.withOpacity(0.8),
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Lỗi',
+        'Không thể xóa video: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.8),
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Search videos
+  void searchVideos(String query) {
+    searchQuery.value = query;
+  }
+
+  // Clear search
+  void clearSearch() {
+    searchQuery.value = '';
+    searchController.clear();
+  }
+
+  // Toggle between video list and input form
+  void toggleView() {
+    showVideoList.value = !showVideoList.value;
+    if (showVideoList.value) {
+      _clearForm();
+    }
+  }
+
+  // Clear form
+  void _clearForm() {
+    clearYouTubeUrl();
+    clearSrtContent();
+    videoTitle.value = '';
+    titleController.clear();
+  }
+
   @override
   void onInit() {
     super.onInit();
+    _historyService = Get.find<VideoHistoryService>();
+
+    // Listen to search input
+    searchController.addListener(() {
+      searchVideos(searchController.text);
+    });
   }
 
   @override
@@ -240,7 +462,9 @@ class VideoInputController extends GetxController {
   @override
   void onClose() {
     urlController.dispose();
+    titleController.dispose();
     srtTextController.dispose();
+    searchController.dispose();
     super.onClose();
   }
 }

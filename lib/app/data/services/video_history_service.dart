@@ -40,11 +40,13 @@ class VideoHistoryService extends GetxService {
       final existingIndex = videos.indexWhere((v) => v.videoId == video.videoId);
 
       if (existingIndex != -1) {
-        // Update existing video only if SRT content is different
+        // Update existing video if any content is different
         final existingVideo = videos[existingIndex];
         if (existingVideo.srtContent != video.srtContent ||
-            existingVideo.srtFileName != video.srtFileName) {
+            existingVideo.srtFileName != video.srtFileName ||
+            existingVideo.title != video.title) {
           existingVideo.lastWatched = video.lastWatched;
+          existingVideo.title = video.title;
           existingVideo.srtContent = video.srtContent;
           existingVideo.srtFileName = video.srtFileName;
           // Don't update position/duration - keep original data

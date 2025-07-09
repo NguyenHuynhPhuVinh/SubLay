@@ -7,7 +7,6 @@ abstract class Routes {
   static const VIDEO_INPUT = _Paths.VIDEO_INPUT;
   static const VIDEO_PLAYER = _Paths.VIDEO_PLAYER;
   static const SUBTITLE_EDITOR = _Paths.SUBTITLE_EDITOR;
-  static const RECENT_VIDEOS = _Paths.RECENT_VIDEOS;
   static const PROMPT_MANAGER = _Paths.PROMPT_MANAGER;
   static const APP_SETTINGS = _Paths.APP_SETTINGS;
 }
@@ -18,7 +17,6 @@ abstract class _Paths {
   static const VIDEO_INPUT = '/video_input';
   static const VIDEO_PLAYER = '/video_player';
   static const SUBTITLE_EDITOR = '/subtitle_editor';
-  static const RECENT_VIDEOS = '/recent_videos';
   static const PROMPT_MANAGER = '/prompt_manager';
   static const APP_SETTINGS = '/app_settings';
 }

@@ -7,8 +7,6 @@ import '../modules/video_player/bindings/video_player_binding.dart';
 import '../modules/video_player/views/video_player_view.dart';
 import '../modules/subtitle_editor/bindings/subtitle_editor_binding.dart';
 import '../modules/subtitle_editor/views/subtitle_editor_view.dart';
-import '../modules/recent_videos/bindings/recent_videos_binding.dart';
-import '../modules/recent_videos/views/recent_videos_view.dart';
 import '../modules/prompt_manager/bindings/prompt_manager_binding.dart';
 import '../modules/prompt_manager/views/prompt_manager_view.dart';
 import '../modules/app_settings/bindings/app_settings_binding.dart';
@@ -41,11 +39,6 @@ class AppPages {
       name: _Paths.SUBTITLE_EDITOR,
       page: () => const SubtitleEditorView(),
       binding: SubtitleEditorBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECENT_VIDEOS,
-      page: () => const RecentVideosView(),
-      binding: RecentVideosBinding(),
     ),
     GetPage(
       name: _Paths.PROMPT_MANAGER,

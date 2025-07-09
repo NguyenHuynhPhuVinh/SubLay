@@ -8,7 +8,6 @@ import 'package:responsive_builder/responsive_builder.dart';
 import '../controllers/main_screen_controller.dart';
 import '../../video_input/views/video_input_view.dart';
 import '../../subtitle_editor/views/subtitle_editor_view.dart';
-import '../../recent_videos/views/recent_videos_view.dart';
 import '../../prompt_manager/views/prompt_manager_view.dart';
 import '../../app_settings/views/app_settings_view.dart';
 
@@ -24,9 +23,8 @@ class MainScreenView extends GetView<MainScreenController> {
           children: const [
             VideoInputView(), // Tab 0
             SubtitleEditorView(), // Tab 1
-            RecentVideosView(), // Tab 2
-            PromptManagerView(), // Tab 3
-            AppSettingsView(), // Tab 4
+            PromptManagerView(), // Tab 2
+            AppSettingsView(), // Tab 3
           ],
         ),
       ),
@@ -68,11 +66,10 @@ class MainScreenView extends GetView<MainScreenController> {
             () => Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildNavItem(0, Iconsax.video, 'Input', true),
+                _buildNavItem(0, Iconsax.video, 'Videos', true),
                 _buildNavItem(1, Iconsax.edit, 'Editor', true),
-                _buildNavItem(2, Iconsax.clock, 'Recent', true),
-                _buildNavItem(3, Iconsax.message_text, 'AI', true),
-                _buildNavItem(4, Iconsax.setting_2, 'Settings', true),
+                _buildNavItem(2, Iconsax.message_text, 'Prompts', true),
+                _buildNavItem(3, Iconsax.setting_2, 'Settings', true),
               ],
             ),
           ),
@@ -116,7 +113,7 @@ class MainScreenView extends GetView<MainScreenController> {
               tabs: [
                 GButton(
                   icon: Iconsax.video,
-                  text: 'Video Input',
+                  text: 'Videos',
                   textStyle: TextStyle(fontSize: 12.sp),
                 ),
                 GButton(
@@ -125,13 +122,8 @@ class MainScreenView extends GetView<MainScreenController> {
                   textStyle: TextStyle(fontSize: 12.sp),
                 ),
                 GButton(
-                  icon: Iconsax.clock,
-                  text: 'Recent',
-                  textStyle: TextStyle(fontSize: 12.sp),
-                ),
-                GButton(
                   icon: Iconsax.message_text,
-                  text: 'AI Prompts',
+                  text: 'Prompts',
                   textStyle: TextStyle(fontSize: 12.sp),
                 ),
                 GButton(

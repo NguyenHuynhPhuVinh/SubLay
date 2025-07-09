@@ -3,9 +3,11 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../controllers/video_input_controller.dart';
 import '../widgets/srt_validation_widget.dart';
+import '../../../data/models/video_with_subtitle.dart';
 
 class VideoInputView extends GetView<VideoInputController> {
   const VideoInputView({Key? key}) : super(key: key);
@@ -14,25 +16,135 @@ class VideoInputView extends GetView<VideoInputController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('DuTupSRT'),
+        title: const Text('Quản lý Video'),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        actions: [
+          Obx(() => IconButton(
+            icon: Icon(
+              controller.showVideoList.value
+                ? Iconsax.add_circle
+                : Iconsax.arrow_left_2,
+            ),
+            onPressed: controller.toggleView,
+            tooltip: controller.showVideoList.value
+                ? 'Thêm video mới'
+                : 'Quay lại danh sách',
+          )),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildHeader(),
-            SizedBox(height: 24.h),
-            _buildYouTubeUrlSection(),
-            SizedBox(height: 24.h),
-            _buildSrtSection(),
-            SizedBox(height: 32.h),
-            _buildPlayButton(),
-          ],
+      body: Obx(() => controller.showVideoList.value
+          ? _buildVideoListView()
+          : _buildVideoInputView()),
+    );
+  }
+
+  // Build video list view
+  Widget _buildVideoListView() {
+    return Column(
+      children: [
+        // Search bar
+        Container(
+          padding: EdgeInsets.all(16.w),
+          child: TextField(
+            controller: controller.searchController,
+            decoration: InputDecoration(
+              hintText: 'Tìm kiếm video...',
+              prefixIcon: const Icon(Iconsax.search_normal),
+              suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Iconsax.close_circle),
+                      onPressed: controller.clearSearch,
+                    )
+                  : const SizedBox.shrink()),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+          ),
         ),
+
+        // Video list
+        Expanded(
+          child: Obx(() {
+            final videos = controller.filteredVideos;
+
+            if (videos.isEmpty) {
+              return _buildEmptyVideoList();
+            }
+
+            return ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              itemCount: videos.length,
+              itemBuilder: (context, index) {
+                final video = videos[index];
+                return _buildVideoItem(video);
+              },
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  // Build empty video list
+  Widget _buildEmptyVideoList() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            controller.searchQuery.value.isNotEmpty
+                ? Iconsax.search_normal
+                : Iconsax.video_slash,
+            size: 64.r,
+            color: Colors.grey,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            controller.searchQuery.value.isNotEmpty
+                ? 'Không tìm thấy video'
+                : 'Chưa có video nào',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            controller.searchQuery.value.isNotEmpty
+                ? 'Thử tìm kiếm với từ khóa khác'
+                : 'Nhấn nút + để thêm video mới',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build video input view
+  Widget _buildVideoInputView() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(),
+          SizedBox(height: 24.h),
+          _buildYouTubeUrlSection(),
+          SizedBox(height: 24.h),
+          _buildVideoTitleSection(),
+          SizedBox(height: 24.h),
+          _buildSrtSection(),
+          SizedBox(height: 32.h),
+          _buildActionButtons(),
+        ],
       ),
     );
   }
@@ -64,7 +176,7 @@ class VideoInputView extends GetView<VideoInputController> {
           ),
           SizedBox(height: 12.h),
           AutoSizeText(
-            'Xem YouTube với phụ đề SRT',
+            'Thêm Video với Phụ đề',
             style: TextStyle(
               fontSize: 20.sp,
               fontWeight: FontWeight.bold,
@@ -74,7 +186,7 @@ class VideoInputView extends GetView<VideoInputController> {
           ),
           SizedBox(height: 8.h),
           AutoSizeText(
-            'Dán link YouTube và tải file SRT để xem video với phụ đề tùy chỉnh',
+            'Nhập link YouTube và phụ đề SRT để lưu vào danh sách',
             style: TextStyle(
               fontSize: 14.sp,
               color: Colors.grey[600],
@@ -168,6 +280,25 @@ class VideoInputView extends GetView<VideoInputController> {
                         color: Colors.green,
                       ),
                     ),
+                    if (controller.isLoadingVideoInfo.value) ...[
+                      SizedBox(width: 8.w),
+                      SizedBox(
+                        width: 12.r,
+                        height: 12.r,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'Đang tải thông tin...',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
                   ],
                 )
               : controller.youtubeUrl.value.isNotEmpty
@@ -189,6 +320,84 @@ class VideoInputView extends GetView<VideoInputController> {
                       ],
                     )
                   : const SizedBox()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoTitleSection() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Theme.of(Get.context!).cardColor,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Iconsax.edit,
+                size: 20.r,
+                color: Colors.orange,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                'Tên Video',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          TextField(
+            controller: controller.titleController,
+            decoration: InputDecoration(
+              hintText: 'Nhập tên video...',
+              prefixIcon: const Icon(Iconsax.video),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: const BorderSide(color: Colors.orange, width: 2),
+              ),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Obx(() => controller.videoTitle.value.isNotEmpty
+              ? Row(
+                  children: [
+                    Icon(
+                      Iconsax.info_circle,
+                      size: 16.r,
+                      color: Colors.blue,
+                    ),
+                    SizedBox(width: 4.w),
+                    Expanded(
+                      child: Text(
+                        'Tên gốc: ${controller.videoTitle.value}',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.blue,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                )
+              : const SizedBox()),
         ],
       ),
     );
@@ -321,23 +530,244 @@ class VideoInputView extends GetView<VideoInputController> {
     );
   }
 
-  Widget _buildPlayButton() {
-    return Obx(() => ElevatedButton.icon(
-          onPressed: controller.canPlayVideo() ? controller.playVideoWithSubtitles : null,
-          icon: const Icon(Iconsax.play),
-          label: Text(
-            'Phát video với phụ đề',
-            style: TextStyle(fontSize: 16.sp),
+  // Build video item
+  Widget _buildVideoItem(VideoWithSubtitle video) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: Theme.of(Get.context!).cardColor,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: controller.canPlayVideo() ? Colors.green : Colors.grey,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 16.h),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => controller.playSavedVideo(video),
+        borderRadius: BorderRadius.circular(12.r),
+        child: Padding(
+          padding: EdgeInsets.all(12.w),
+          child: Row(
+            children: [
+              // Thumbnail
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8.r),
+                child: CachedNetworkImage(
+                  imageUrl: video.thumbnail,
+                  width: 120.w,
+                  height: 68.h,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[300],
+                    child: Icon(
+                      Iconsax.video,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[300],
+                    child: Icon(
+                      Iconsax.video_slash,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(width: 12.w),
+
+              // Video info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      video.title,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    SizedBox(height: 4.h),
+
+                    Row(
+                      children: [
+                        Icon(
+                          Iconsax.document_text,
+                          size: 12.r,
+                          color: Colors.grey[600],
+                        ),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Text(
+                            video.srtFileName.isNotEmpty
+                                ? video.srtFileName
+                                : 'Phụ đề tùy chỉnh',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 4.h),
+
+                    Text(
+                      video.formattedLastWatched,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Actions
+              PopupMenuButton<String>(
+                icon: Icon(
+                  Iconsax.more,
+                  size: 20.r,
+                  color: Colors.grey[600],
+                ),
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    controller.editSavedVideo(video);
+                  } else if (value == 'delete') {
+                    _showDeleteDialog(video);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Iconsax.edit),
+                        SizedBox(width: 8),
+                        Text('Sửa'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Iconsax.trash, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('Xóa', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Build action buttons
+  Widget _buildActionButtons() {
+    return Obx(() => Column(
+      children: [
+        // Save button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: controller.canPlayVideo() && !controller.isLoading.value
+                ? controller.saveVideoWithSubtitle
+                : null,
+            icon: controller.isLoading.value
+                ? SizedBox(
+                    width: 20.r,
+                    height: 20.r,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Iconsax.save_2),
+            label: Text(
+              controller.isLoading.value ? 'Đang lưu...' : 'Lưu vào danh sách',
+              style: TextStyle(fontSize: 16.sp),
             ),
-            elevation: controller.canPlayVideo() ? 4 : 0,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: controller.canPlayVideo() && !controller.isLoading.value
+                  ? Colors.blue
+                  : Colors.grey,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              elevation: controller.canPlayVideo() && !controller.isLoading.value ? 4 : 0,
+            ),
           ),
-        ));
+        ),
+
+        SizedBox(height: 12.h),
+
+        // Play button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: controller.canPlayVideo() && !controller.isLoading.value
+                ? controller.playVideoWithSubtitles
+                : null,
+            icon: const Icon(Iconsax.play),
+            label: Text(
+              'Phát ngay',
+              style: TextStyle(fontSize: 16.sp),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: controller.canPlayVideo() && !controller.isLoading.value
+                  ? Colors.green
+                  : Colors.grey,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              elevation: controller.canPlayVideo() && !controller.isLoading.value ? 4 : 0,
+            ),
+          ),
+        ),
+      ],
+    ));
+  }
+
+  // Show delete dialog
+  void _showDeleteDialog(VideoWithSubtitle video) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Xóa video'),
+        content: Text('Bạn có chắc muốn xóa "${video.title}" khỏi danh sách?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(Get.context!).pop(),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () {
+              controller.deleteSavedVideo(video);
+              Navigator.of(Get.context!).pop();
+            },
+            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+      barrierDismissible: true,
+    );
   }
 }
