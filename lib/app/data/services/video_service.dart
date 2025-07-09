@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import '../models/video_with_subtitle.dart';
 
-class VideoHistoryService extends GetxService {
+class VideoService extends GetxService {
   static const String _boxName = 'video_history';
   late Box<VideoWithSubtitle> _box;
 

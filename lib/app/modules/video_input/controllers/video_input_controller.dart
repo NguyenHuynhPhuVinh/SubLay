@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../../core/utils/srt_parser.dart';
-import '../../../data/services/video_history_service.dart';
+import '../../../data/services/video_service.dart';
 import '../../../data/models/video_with_subtitle.dart';
 
 class VideoInputController extends GetxController {
   // Services
-  late VideoHistoryService _historyService;
+  late VideoService _historyService;
   final Dio _dio = Dio();
 
   // Observable variables
@@ -446,7 +446,7 @@ class VideoInputController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _historyService = Get.find<VideoHistoryService>();
+    _historyService = Get.find<VideoService>();
 
     // Listen to search input
     searchController.addListener(() {

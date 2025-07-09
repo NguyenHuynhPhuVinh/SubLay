@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/utils/srt_parser.dart';
 import '../../../core/services/subtitle_settings_service.dart';
-import '../../../data/services/video_history_service.dart';
+import '../../../data/services/video_service.dart';
 import '../../../data/services/app_settings_service.dart';
 import '../../../data/models/video_with_subtitle.dart';
 
 class VideoPlayerController extends GetxController {
   // Services
-  final VideoHistoryService _historyService = Get.find<VideoHistoryService>();
+  final VideoService _historyService = Get.find<VideoService>();
   final AppSettingsService _settingsService = Get.find<AppSettingsService>();
   final SubtitleSettingsService _subtitleSettings = Get.find<SubtitleSettingsService>();
 
