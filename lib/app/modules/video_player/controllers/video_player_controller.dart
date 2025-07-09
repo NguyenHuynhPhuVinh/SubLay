@@ -34,6 +34,7 @@ class VideoPlayerController extends GetxController {
   final srtContent = ''.obs;
   final videoId = ''.obs;
   final youtubeUrl = ''.obs;
+  final videoTitle = ''.obs;
   final srtFileName = ''.obs;
 
   // Current video model
@@ -55,6 +56,7 @@ class VideoPlayerController extends GetxController {
     if (args != null) {
       videoId.value = args['videoId'] ?? '';
       youtubeUrl.value = args['youtubeUrl'] ?? '';
+      videoTitle.value = args['title'] ?? 'YouTube Video';
       srtContent.value = args['srtContent'] ?? '';
       srtFileName.value = args['srtFileName'] ?? '';
 
@@ -392,9 +394,11 @@ class VideoPlayerController extends GetxController {
     required String youtubeUrl,
     required String srtContent,
     required String srtFileName,
+    String? title,
   }) {
     this.videoId.value = videoId;
     this.youtubeUrl.value = youtubeUrl;
+    this.videoTitle.value = title ?? 'YouTube Video';
     this.srtContent.value = srtContent;
     this.srtFileName.value = srtFileName;
 
@@ -416,6 +420,7 @@ class VideoPlayerController extends GetxController {
         youtubeUrl: youtubeUrl.value,
         srtContent: srtContent.value,
         srtFileName: srtFileName.value,
+        title: videoTitle.value,
       );
 
       // Save to history when user starts watching (no auto-update)

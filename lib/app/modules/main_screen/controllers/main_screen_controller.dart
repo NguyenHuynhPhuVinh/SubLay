@@ -18,12 +18,14 @@ class MainScreenController extends GetxController {
     required String youtubeUrl,
     required String srtContent,
     required String srtFileName,
+    String? title,
   }) {
     Get.toNamed(
       '/video_player',
       arguments: {
         'videoId': videoId,
         'youtubeUrl': youtubeUrl,
+        'title': title ?? 'YouTube Video',
         'srtContent': srtContent,
         'srtFileName': srtFileName,
       },

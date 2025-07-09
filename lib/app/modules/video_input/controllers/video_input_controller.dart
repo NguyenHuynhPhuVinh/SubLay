@@ -339,6 +339,11 @@ class VideoInputController extends GetxController {
         final arguments = {
           'videoId': videoId,
           'youtubeUrl': youtubeUrl.value,
+          'title': titleController.text.isNotEmpty
+              ? titleController.text
+              : videoTitle.value.isNotEmpty
+                  ? videoTitle.value
+                  : 'YouTube Video',
           'srtContent': srtContent.value,
           'srtFileName': srtFileName.value,
         };
@@ -372,6 +377,7 @@ class VideoInputController extends GetxController {
     final arguments = {
       'videoId': video.videoId,
       'youtubeUrl': video.youtubeUrl,
+      'title': video.title,
       'srtContent': video.srtContent,
       'srtFileName': video.srtFileName,
     };
