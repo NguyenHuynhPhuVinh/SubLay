@@ -167,7 +167,7 @@ class VideoInputController extends GetxController {
     if (currentContent.trim().isEmpty) return;
 
     // Process with smart line breaking
-    final result = SrtParser.processAndOptimizeSrt(currentContent, maxLineLength: 35);
+    final result = SrtParser.processAndOptimizeSrt(currentContent, maxLineLength: 50);
 
     if (result.fixedContent != null) {
       srtContent.value = result.fixedContent!;

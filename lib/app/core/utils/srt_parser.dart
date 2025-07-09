@@ -162,7 +162,7 @@ class SrtParser {
   }
 
   // Generate SRT with smart line breaking
-  static String generateSrtWithSmartLineBreaking(List<SrtSubtitle> subtitles, {int maxLineLength = 35}) {
+  static String generateSrtWithSmartLineBreaking(List<SrtSubtitle> subtitles, {int maxLineLength = 50}) {
     final buffer = StringBuffer();
 
     for (int i = 0; i < subtitles.length; i++) {
@@ -181,84 +181,204 @@ class SrtParser {
     return buffer.toString();
   }
 
-  // Apply smart line breaking to subtitle text
+  // Apply smart line breaking to subtitle text - simplified approach
   static String _applySmartLineBreaking(String text, int maxLineLength) {
-    // Tách các dòng hiện có (do SRT định dạng)
-    final existingLines = text.split('\n');
-    final processedLines = <String>[];
-
-    for (final line in existingLines) {
-      if (line.trim().isEmpty) {
-        processedLines.add('');
-        continue;
-      }
-
-      // Nếu dòng ngắn hơn maxLineLength, giữ nguyên
-      if (line.length <= maxLineLength) {
-        processedLines.add(line);
-        continue;
-      }
-
-      // Ngắt dòng thông minh
-      final brokenLines = _breakLongLine(line, maxLineLength);
-      processedLines.addAll(brokenLines);
+    // Kiểm tra xem có format đặc biệt cần bảo vệ không
+    if (_hasSpecialFormat(text)) {
+      return text; // Giữ nguyên format gốc
     }
 
-    return processedLines.join('\n');
+    // Bước 1: Gộp tất cả thành 1 dòng
+    final singleLine = text.split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .join(' ');
+
+    if (singleLine.isEmpty) return '';
+
+    // Bước 2: Ngắt thành tối đa 2 dòng
+    return _breakIntoTwoLines(singleLine, maxLineLength);
   }
 
-  // Break long line into multiple lines intelligently
-  static List<String> _breakLongLine(String line, int maxLineLength) {
-    final words = line.split(' ');
-    final lines = <String>[];
-    String currentLine = '';
+  // Check if text has special formatting that should be preserved
+  static bool _hasSpecialFormat(String text) {
+    final lines = text.split('\n');
+
+    // Kiểm tra format quote (bắt đầu với >)
+    if (lines.any((line) => line.trim().startsWith('>'))) {
+      return true;
+    }
+
+    // Kiểm tra format list (bắt đầu với -, *, số)
+    if (lines.any((line) => RegExp(r'^\s*[-*•]\s+').hasMatch(line) ||
+                            RegExp(r'^\s*\d+[\.\)]\s+').hasMatch(line))) {
+      return true;
+    }
+
+    // Kiểm tra format dialog (có dấu - ở đầu dòng)
+    if (lines.length > 1 && lines.any((line) => line.trim().startsWith('-'))) {
+      return true;
+    }
+
+    // Kiểm tra format poetry/verse (nhiều dòng ngắn có vẻ cố ý)
+    if (lines.length > 2 && lines.every((line) => line.trim().length < 30)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Break text into maximum 2 lines optimally
+  static String _breakIntoTwoLines(String text, int maxLineLength) {
+    // Nếu text ngắn, giữ nguyên 1 dòng
+    if (text.length <= maxLineLength) {
+      return text;
+    }
+
+    final words = text.split(' ');
+    if (words.length == 1) {
+      // Từ đơn quá dài, cắt cứng
+      final mid = (text.length / 2).round();
+      return '${text.substring(0, mid)}\n${text.substring(mid)}';
+    }
+
+    // Tìm điểm ngắt tối ưu để cân bằng 2 dòng
+    int bestSplit = _findOptimalSplit(words, maxLineLength);
+
+    final line1 = words.take(bestSplit).join(' ');
+    final line2 = words.skip(bestSplit).join(' ');
+
+    return '$line1\n$line2';
+  }
+
+  // Find optimal split point for two lines
+  static int _findOptimalSplit(List<String> words, int maxLineLength) {
+    int bestSplit = 1;
+    int bestBalance = 999999;
+
+    for (int i = 1; i < words.length; i++) {
+      final line1 = words.take(i).join(' ');
+      final line2 = words.skip(i).join(' ');
+
+      // Bỏ qua nếu dòng 1 quá dài
+      if (line1.length > maxLineLength) break;
+
+      // Tính độ cân bằng
+      final balance = (line1.length - line2.length).abs();
+
+      // Ưu tiên split có độ cân bằng tốt và dòng 2 không quá dài
+      if (line2.length <= maxLineLength && balance < bestBalance) {
+        bestBalance = balance;
+        bestSplit = i;
+      }
+    }
+
+    return bestSplit;
+  }
+
+  // Process long subtitle by splitting into multiple parts if needed
+  static List<SrtSubtitle> _processLongSubtitle(SrtSubtitle subtitle, int maxLineLength, int startIndex) {
+    // Kiểm tra format đặc biệt trước
+    if (_hasSpecialFormat(subtitle.text)) {
+      return [SrtSubtitle(
+        index: startIndex,
+        startTime: subtitle.startTime,
+        endTime: subtitle.endTime,
+        text: subtitle.text, // Giữ nguyên
+      )];
+    }
+
+    // Gộp text thành 1 dòng
+    final singleLine = subtitle.text.split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .join(' ');
+
+    if (singleLine.isEmpty) {
+      return [subtitle];
+    }
+
+    // Thử ngắt thành 2 dòng
+    final twoLineResult = _breakIntoTwoLines(singleLine, maxLineLength);
+    final lines = twoLineResult.split('\n');
+
+    // Nếu cả 2 dòng đều OK, trả về subtitle đơn
+    if (lines.length <= 2 && lines.every((line) => line.length <= maxLineLength)) {
+      return [SrtSubtitle(
+        index: startIndex,
+        startTime: subtitle.startTime,
+        endTime: subtitle.endTime,
+        text: twoLineResult,
+      )];
+    }
+
+    // Nếu vẫn quá dài, chia thành nhiều subtitle
+    return _splitIntoMultipleSubtitles(singleLine, subtitle, maxLineLength, startIndex);
+  }
+
+  // Split very long text into multiple subtitles with time distribution
+  static List<SrtSubtitle> _splitIntoMultipleSubtitles(
+    String text,
+    SrtSubtitle originalSubtitle,
+    int maxLineLength,
+    int startIndex
+  ) {
+    final words = text.split(' ');
+    final subtitles = <SrtSubtitle>[];
+    final totalDuration = originalSubtitle.endTime.inMilliseconds - originalSubtitle.startTime.inMilliseconds;
+
+    // Chia text thành các phần, mỗi phần tối đa 2 dòng
+    final chunks = <String>[];
+    String currentChunk = '';
 
     for (final word in words) {
-      // Nếu từ đơn lẻ quá dài, cắt cứng
-      if (word.length > maxLineLength) {
-        if (currentLine.isNotEmpty) {
-          lines.add(currentLine.trim());
-          currentLine = '';
-        }
+      final testChunk = currentChunk.isEmpty ? word : '$currentChunk $word';
+      final testResult = _breakIntoTwoLines(testChunk, maxLineLength);
+      final testLines = testResult.split('\n');
 
-        // Cắt từ dài thành nhiều phần
-        final chunks = _breakLongWord(word, maxLineLength);
-        lines.addAll(chunks.take(chunks.length - 1));
-        currentLine = chunks.last;
-        continue;
-      }
-
-      // Kiểm tra nếu thêm từ này có vượt quá độ dài
-      final testLine = currentLine.isEmpty ? word : '$currentLine $word';
-
-      if (testLine.length <= maxLineLength) {
-        currentLine = testLine;
+      // Nếu vẫn OK với 2 dòng, tiếp tục thêm
+      if (testLines.length <= 2 && testLines.every((line) => line.length <= maxLineLength)) {
+        currentChunk = testChunk;
       } else {
-        // Xuống dòng
-        if (currentLine.isNotEmpty) {
-          lines.add(currentLine.trim());
+        // Lưu chunk hiện tại và bắt đầu chunk mới
+        if (currentChunk.isNotEmpty) {
+          chunks.add(currentChunk);
         }
-        currentLine = word;
+        currentChunk = word;
       }
     }
 
-    // Thêm dòng cuối
-    if (currentLine.isNotEmpty) {
-      lines.add(currentLine.trim());
+    // Thêm chunk cuối
+    if (currentChunk.isNotEmpty) {
+      chunks.add(currentChunk);
     }
 
-    return lines.isEmpty ? [''] : lines;
+    // Tạo subtitle cho mỗi chunk với thời gian phân bổ
+    for (int i = 0; i < chunks.length; i++) {
+      final chunkDuration = (totalDuration / chunks.length).round();
+      final startTime = Duration(
+        milliseconds: originalSubtitle.startTime.inMilliseconds + (i * chunkDuration)
+      );
+      final endTime = Duration(
+        milliseconds: startTime.inMilliseconds + chunkDuration
+      );
+
+      final chunkText = _breakIntoTwoLines(chunks[i], maxLineLength);
+
+      subtitles.add(SrtSubtitle(
+        index: startIndex + i,
+        startTime: startTime,
+        endTime: endTime,
+        text: chunkText,
+      ));
+    }
+
+    return subtitles;
   }
 
-  // Break very long word into chunks
-  static List<String> _breakLongWord(String word, int maxLength) {
-    final chunks = <String>[];
-    for (int i = 0; i < word.length; i += maxLength) {
-      final end = (i + maxLength < word.length) ? i + maxLength : word.length;
-      chunks.add(word.substring(i, end));
-    }
-    return chunks;
-  }
+
+
+
 
   static String findCurrentSubtitle(List<SrtSubtitle> subtitles, Duration currentTime) {
     for (final subtitle in subtitles) {
@@ -287,7 +407,7 @@ class SrtParser {
   }
 
   // Process SRT content with smart line breaking and validation
-  static SrtValidationResult processAndOptimizeSrt(String content, {int maxLineLength = 35}) {
+  static SrtValidationResult processAndOptimizeSrt(String content, {int maxLineLength = 50}) {
     if (content.trim().isEmpty) {
       return SrtValidationResult(
         isValid: false,
@@ -308,16 +428,15 @@ class SrtParser {
       );
     }
 
-    // Step 2: Apply smart line breaking
-    final optimizedSubtitles = subtitles.map((subtitle) {
-      final optimizedText = _applySmartLineBreaking(subtitle.text, maxLineLength);
-      return SrtSubtitle(
-        index: subtitle.index,
-        startTime: subtitle.startTime,
-        endTime: subtitle.endTime,
-        text: optimizedText,
-      );
-    }).toList();
+    // Step 2: Apply smart line breaking and handle long subtitles
+    final optimizedSubtitles = <SrtSubtitle>[];
+    int currentIndex = 1;
+
+    for (final subtitle in subtitles) {
+      final processedSubtitles = _processLongSubtitle(subtitle, maxLineLength, currentIndex);
+      optimizedSubtitles.addAll(processedSubtitles);
+      currentIndex += processedSubtitles.length;
+    }
 
     // Step 3: Generate optimized content
     final optimizedContent = generateSrt(optimizedSubtitles);
