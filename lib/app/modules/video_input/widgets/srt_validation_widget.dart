@@ -6,13 +6,11 @@ import '../../../core/utils/srt_parser.dart';
 class SrtValidationWidget extends StatelessWidget {
   final SrtValidationResult validationResult;
   final VoidCallback? onFixApplied;
-  final VoidCallback? onOptimizeLineBreaking;
 
   const SrtValidationWidget({
     Key? key,
     required this.validationResult,
     this.onFixApplied,
-    this.onOptimizeLineBreaking,
   }) : super(key: key);
 
   @override
@@ -45,8 +43,7 @@ class SrtValidationWidget extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
-            _buildOptimizeButton(),
+
           ],
         ),
       );
@@ -95,8 +92,6 @@ class SrtValidationWidget extends StatelessWidget {
             const SizedBox(height: 12),
           ],
 
-          // Optimize button - always show
-          _buildOptimizeButton(),
         ],
       ),
     );
@@ -233,23 +228,5 @@ class SrtValidationWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildOptimizeButton() {
-    if (onOptimizeLineBreaking == null) return const SizedBox.shrink();
 
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onOptimizeLineBreaking,
-        icon: const Icon(Iconsax.text, size: 18),
-        label: const Text('Tối ưu ngắt dòng thông minh'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.purple,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        ),
-      ),
-    );
-  }
 }
