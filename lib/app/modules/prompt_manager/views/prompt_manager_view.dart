@@ -148,23 +148,36 @@ class PromptManagerView extends GetView<PromptManagerController> {
     try {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        Get.snackbar(
+          'Thành công',
+          'Đã mở Google AI Studio',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
       } else {
         Get.snackbar(
           'Lỗi',
-          'Không thể mở trình duyệt',
+          'Không thể mở trình duyệt. Vui lòng kiểm tra lại cài đặt ứng dụng.',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
           colorText: Colors.white,
+          duration: const Duration(seconds: 3),
         );
       }
     } catch (e) {
       Get.snackbar(
         'Lỗi',
-        'Không thể mở link: $e',
+        'Không thể mở link: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: const Duration(seconds: 3),
       );
     }
   }
