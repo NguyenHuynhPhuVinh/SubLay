@@ -165,7 +165,7 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
                   ..color = Colors.black,
               ),
               textAlign: TextAlign.center,
-              maxLines: 5,
+              maxLines: 3,
               minFontSize: 10, // Giảm từ 16 xuống 10
               maxFontSize: 18, // Giảm từ 26 xuống 18
               overflow: TextOverflow.ellipsis,
@@ -182,7 +182,7 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
                 letterSpacing: 0.5,
               ),
               textAlign: TextAlign.center,
-              maxLines: 5,
+              maxLines: 3,
               minFontSize: 10, // Giảm từ 16 xuống 10
               maxFontSize: 18, // Giảm từ 26 xuống 18
               overflow: TextOverflow.ellipsis,

@@ -54,50 +54,50 @@ class SilenceGap {
 class SrtParser {
   static List<SrtSubtitle> parse(String srtContent) {
     final List<SrtSubtitle> subtitles = [];
-    
+
     if (srtContent.trim().isEmpty) {
       return subtitles;
     }
 
     // Split by double newlines to separate subtitle blocks
     final blocks = srtContent.split(RegExp(r'\n\s*\n'));
-    
+
     for (final block in blocks) {
       final subtitle = _parseBlock(block.trim());
       if (subtitle != null) {
         subtitles.add(subtitle);
       }
     }
-    
+
     return subtitles;
   }
 
   static SrtSubtitle? _parseBlock(String block) {
     if (block.isEmpty) return null;
-    
+
     final lines = block.split('\n');
     if (lines.length < 3) return null;
 
     try {
       // Parse index
       final index = int.parse(lines[0].trim());
-      
+
       // Parse time range
       final timeRange = lines[1].trim();
       final times = _parseTimeRange(timeRange);
       if (times == null) return null;
-      
+
       // Parse text (can be multiple lines) - kiểm tra format đặc biệt trước
       final textLines = lines.skip(2).toList();
       final originalText = textLines.join('\n').trim();
 
       // Kiểm tra xem có phải format đặc biệt với dấu > không
       final rawText = _isSpecialQuoteFormat(originalText)
-          ? originalText  // Giữ nguyên ngắt dòng cho format đặc biệt
+          ? originalText // Giữ nguyên ngắt dòng cho format đặc biệt
           : textLines.join(' ').trim(); // Gộp thành 1 dòng cho format thường
 
       final text = _processSubtitleText(rawText);
-      
+
       return SrtSubtitle(
         index: index,
         startTime: times['start']!,
@@ -112,11 +112,13 @@ class SrtParser {
 
   static Map<String, Duration>? _parseTimeRange(String timeRange) {
     // Format: 00:00:01,000 --> 00:00:04,000
-    final regex = RegExp(r'(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})');
+    final regex = RegExp(
+      r'(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})',
+    );
     final match = regex.firstMatch(timeRange);
-    
+
     if (match == null) return null;
-    
+
     try {
       final startTime = Duration(
         hours: int.parse(match.group(1)!),
@@ -124,18 +126,15 @@ class SrtParser {
         seconds: int.parse(match.group(3)!),
         milliseconds: int.parse(match.group(4)!),
       );
-      
+
       final endTime = Duration(
         hours: int.parse(match.group(5)!),
         minutes: int.parse(match.group(6)!),
         seconds: int.parse(match.group(7)!),
         milliseconds: int.parse(match.group(8)!),
       );
-      
-      return {
-        'start': startTime,
-        'end': endTime,
-      };
+
+      return {'start': startTime, 'end': endTime};
     } catch (e) {
       print('Error parsing time range: $e');
       return null;
@@ -146,43 +145,42 @@ class SrtParser {
     final hours = duration.inHours.toString().padLeft(2, '0');
     final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
     final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    final milliseconds = (duration.inMilliseconds % 1000).toString().padLeft(3, '0');
-    
+    final milliseconds = (duration.inMilliseconds % 1000).toString().padLeft(
+      3,
+      '0',
+    );
+
     return '$hours:$minutes:$seconds,$milliseconds';
   }
 
   static String generateSrt(List<SrtSubtitle> subtitles) {
     final buffer = StringBuffer();
-    
+
     for (int i = 0; i < subtitles.length; i++) {
       final subtitle = subtitles[i];
-      
+
       buffer.writeln(subtitle.index);
-      buffer.writeln('${formatTime(subtitle.startTime)} --> ${formatTime(subtitle.endTime)}');
+      buffer.writeln(
+        '${formatTime(subtitle.startTime)} --> ${formatTime(subtitle.endTime)}',
+      );
       // Đảm bảo text được xử lý và ngắt dòng phù hợp
       buffer.writeln(_processSubtitleText(subtitle.text));
-      
+
       if (i < subtitles.length - 1) {
         buffer.writeln();
       }
     }
-    
+
     return buffer.toString();
   }
 
-
-
-
-
-
-
-
-
-
-
-  static String findCurrentSubtitle(List<SrtSubtitle> subtitles, Duration currentTime) {
+  static String findCurrentSubtitle(
+    List<SrtSubtitle> subtitles,
+    Duration currentTime,
+  ) {
     for (final subtitle in subtitles) {
-      if (currentTime >= subtitle.startTime && currentTime <= subtitle.endTime) {
+      if (currentTime >= subtitle.startTime &&
+          currentTime <= subtitle.endTime) {
         return subtitle.text;
       }
     }
@@ -193,7 +191,9 @@ class SrtParser {
     if (content.trim().isEmpty) return false;
 
     // Basic validation - check if it contains time format
-    final timeRegex = RegExp(r'\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}');
+    final timeRegex = RegExp(
+      r'\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}',
+    );
     return timeRegex.hasMatch(content);
   }
 
@@ -202,7 +202,7 @@ class SrtParser {
     return _processSubtitleText(text);
   }
 
-  // Xử lý nội dung subtitle sau khi gộp thành 1 dòng và ngắt dòng phù hợp
+  // Xử lý nội dung subtitle - chỉ xử lý xuống dòng và trường hợp >
   static String _processSubtitleText(String text) {
     if (text.isEmpty) return text;
 
@@ -211,48 +211,10 @@ class SrtParser {
       return _processSpecialQuoteFormat(text);
     }
 
-    // Bước 1: Loại bỏ các thẻ HTML và formatting
-    String processedText = text
-        .replaceAll(RegExp(r'<[^>]*>'), '') // Loại bỏ HTML tags
-        .replaceAll(RegExp(r'\{[^}]*\}'), '') // Loại bỏ formatting tags như {an8}
-        .replaceAll(RegExp(r'\[[^\]]*\]'), ''); // Loại bỏ các thẻ trong ngoặc vuông
+    // Chỉ xử lý xuống dòng cơ bản - gộp thành 1 dòng và ngắt dòng phù hợp
+    String processedText = text.replaceAll(RegExp(r'\s+'), ' ').trim();
 
-    // Bước 2: Chuẩn hóa khoảng trắng - gộp nhiều khoảng trắng thành 1
-    processedText = processedText.replaceAll(RegExp(r'\s+'), ' ');
-
-    // Bước 3: Xử lý dấu câu - đảm bảo có khoảng trắng sau dấu câu
-    processedText = processedText.replaceAllMapped(
-      RegExp(r'([.!?,:;])([^\s])'),
-      (match) => '${match.group(1)} ${match.group(2)}', // Thêm space sau dấu câu
-    );
-    processedText = processedText.replaceAllMapped(
-      RegExp(r'\s+([.!?,:;])'),
-      (match) => '${match.group(1)}', // Loại bỏ space trước dấu câu
-    );
-
-    // Bước 4: Xử lý dấu ngoặc
-    processedText = processedText
-        .replaceAll(RegExp(r'\(\s+'), '(') // Loại bỏ space sau dấu mở ngoặc
-        .replaceAll(RegExp(r'\s+\)'), ')') // Loại bỏ space trước dấu đóng ngoặc
-        .replaceAll(RegExp(r'\[\s+'), '[') // Loại bỏ space sau dấu mở ngoặc vuông
-        .replaceAll(RegExp(r'\s+\]'), ']'); // Loại bỏ space trước dấu đóng ngoặc vuông
-
-    // Bước 5: Xử lý dấu gạch nối và gạch dài
-    processedText = processedText
-        .replaceAll(RegExp(r'\s*-\s*'), ' - ') // Chuẩn hóa dấu gạch nối
-        .replaceAll(RegExp(r'\s*—\s*'), ' — '); // Chuẩn hóa dấu gạch dài
-
-    // Bước 6: Loại bỏ khoảng trắng thừa ở đầu và cuối
-    processedText = processedText.trim();
-
-    // Bước 7: Xử lý các trường hợp đặc biệt
-    // Loại bỏ các ký tự điều khiển không mong muốn
-    processedText = processedText.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
-
-    // Bước 8: Đảm bảo không có khoảng trắng kép
-    processedText = processedText.replaceAll(RegExp(r'\s{2,}'), ' ');
-
-    // Bước 9: Ngắt dòng thông minh sau khi đã gộp và xử lý
+    // Ngắt dòng thông minh
     processedText = _smartLineBreaking(processedText);
 
     return processedText.trim();
@@ -265,6 +227,7 @@ class SrtParser {
     // Cấu hình ngắt dòng
     const int maxLineLength = 42; // Độ dài tối đa mỗi dòng (chuẩn subtitle)
     const int maxLines = 2; // Tối đa 2 dòng cho subtitle
+    const int minSecondLineLength = 15; // Độ dài tối thiểu của dòng thứ 2
 
     // Nếu text ngắn hơn maxLineLength, giữ nguyên 1 dòng
     if (text.length <= maxLineLength) {
@@ -307,7 +270,9 @@ class SrtParser {
           final remainingWords = words.skip(i + 1).toList();
           if (remainingWords.isNotEmpty) {
             final remainingText = remainingWords.join(' ');
-            currentLine = currentLine.isEmpty ? remainingText : '$currentLine $remainingText';
+            currentLine = currentLine.isEmpty
+                ? remainingText
+                : '$currentLine $remainingText';
           }
           break;
         }
@@ -327,6 +292,16 @@ class SrtParser {
       final lastLine = finalLines.last;
       final extraLines = lines.skip(maxLines).join(' ');
       finalLines[finalLines.length - 1] = '$lastLine $extraLines';
+    }
+
+    // Kiểm tra và tối ưu hóa: nếu có 2 dòng và dòng thứ 2 quá ngắn, gộp lại thành 1 dòng
+    if (finalLines.length == 2) {
+      final secondLine = finalLines[1];
+      if (secondLine.length < minSecondLineLength) {
+        final combinedText = '${finalLines[0]} $secondLine';
+        // Gộp lại bất kể độ dài vì dòng thứ 2 quá ngắn
+        return combinedText;
+      }
     }
 
     return finalLines.join('\n');
@@ -370,39 +345,8 @@ class SrtParser {
     for (final line in lines) {
       String processedLine = line.trim();
 
-      // Loại bỏ các thẻ HTML và formatting nhưng giữ nguyên cấu trúc dòng
-      processedLine = processedLine
-          .replaceAll(RegExp(r'<[^>]*>'), '') // Loại bỏ HTML tags
-          .replaceAll(RegExp(r'\{[^}]*\}'), '') // Loại bỏ formatting tags
-          .replaceAll(RegExp(r'\[[^\]]*\]'), ''); // Loại bỏ các thẻ trong ngoặc vuông
-
-      // Chuẩn hóa khoảng trắng trong dòng
+      // Chỉ chuẩn hóa khoảng trắng trong dòng, giữ nguyên nội dung
       processedLine = processedLine.replaceAll(RegExp(r'\s+'), ' ').trim();
-
-      // Xử lý dấu câu cho từng dòng bằng replaceAllMapped
-      processedLine = processedLine.replaceAllMapped(
-        RegExp(r'([.!?,:;])([^\s])'),
-        (match) => '${match.group(1)} ${match.group(2)}',
-      );
-      processedLine = processedLine.replaceAllMapped(
-        RegExp(r'\s+([.!?,:;])'),
-        (match) => '${match.group(1)}',
-      );
-
-      // Xử lý dấu ngoặc
-      processedLine = processedLine
-          .replaceAll(RegExp(r'\(\s+'), '(')
-          .replaceAll(RegExp(r'\s+\)'), ')')
-          .replaceAll(RegExp(r'\[\s+'), '[')
-          .replaceAll(RegExp(r'\s+\]'), ']');
-
-      // Xử lý dấu gạch nối
-      processedLine = processedLine
-          .replaceAll(RegExp(r'\s*-\s*'), ' - ')
-          .replaceAll(RegExp(r'\s*—\s*'), ' — ');
-
-      // Loại bỏ ký tự điều khiển
-      processedLine = processedLine.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
 
       if (processedLine.isNotEmpty) {
         processedLines.add(processedLine);
@@ -486,7 +430,7 @@ class SrtParser {
       if (subtitle['startMs'] >= subtitle['endMs']) {
         timelineErrors.add(
           'Subtitle ${subtitle['subtitleNumber']} (dòng ${subtitle['lineNumber']}): '
-          'Thời gian bắt đầu >= thời gian kết thúc (${subtitle['startTime']} --> ${subtitle['endTime']})'
+          'Thời gian bắt đầu >= thời gian kết thúc (${subtitle['startTime']} --> ${subtitle['endTime']})',
         );
       }
 
@@ -496,7 +440,7 @@ class SrtParser {
         if (subtitle['endMs'] > nextSubtitle['startMs']) {
           timelineErrors.add(
             'Subtitle ${subtitle['subtitleNumber']} và ${nextSubtitle['subtitleNumber']}: '
-            'Thời gian overlap (${subtitle['endTime']} > ${nextSubtitle['startTime']})'
+            'Thời gian overlap (${subtitle['endTime']} > ${nextSubtitle['startTime']})',
           );
         }
       }
@@ -513,13 +457,15 @@ class SrtParser {
       final gapMs = next['startMs'] - current['endMs'];
       if (gapMs > silenceThresholdMs) {
         final gapSeconds = gapMs / 1000.0;
-        gaps.add(SilenceGap(
-          gapSeconds: gapSeconds,
-          currentSubIndex: current['subtitleNumber'],
-          nextSubIndex: next['subtitleNumber'],
-          endTime: current['endTime'],
-          startTime: next['startTime'],
-        ));
+        gaps.add(
+          SilenceGap(
+            gapSeconds: gapSeconds,
+            currentSubIndex: current['subtitleNumber'],
+            nextSubIndex: next['subtitleNumber'],
+            endTime: current['endTime'],
+            startTime: next['startTime'],
+          ),
+        );
       }
     }
 
@@ -531,7 +477,7 @@ class SrtParser {
       silenceGaps.add(
         'Khoảng lặng ${gap.gapSeconds.toStringAsFixed(1)}s giữa subtitle '
         '${gap.currentSubIndex} và ${gap.nextSubIndex} '
-        '(từ ${gap.endTime} đến ${gap.startTime})'
+        '(từ ${gap.endTime} đến ${gap.startTime})',
       );
     }
 
@@ -547,6 +493,7 @@ class SrtParser {
       formatFixesCount: formatFixesCount,
     );
   }
+
   // Helper methods for time format fixing
   static String _fixTimeFormat(String timeStr) {
     timeStr = timeStr.trim();
@@ -557,32 +504,38 @@ class SrtParser {
       // Pattern 1: MM:SS,mmm (thiếu giờ) -> 00:MM:SS,mmm
       {
         'pattern': RegExp(r'^(\d{1,2}):(\d{2}),(\d{3})$'),
-        'replacement': (Match m) => '00:${m.group(1)!.padLeft(2, '0')}:${m.group(2)},${m.group(3)}',
+        'replacement': (Match m) =>
+            '00:${m.group(1)!.padLeft(2, '0')}:${m.group(2)},${m.group(3)}',
       },
       // Pattern 2: H:MM:mmm (dấu : thay vì ,) -> 0H:MM,mmm
       {
         'pattern': RegExp(r'^(\d):(\d{2}):(\d{3})$'),
-        'replacement': (Match m) => '00:0${m.group(1)}:${m.group(2)},${m.group(3)}',
+        'replacement': (Match m) =>
+            '00:0${m.group(1)}:${m.group(2)},${m.group(3)}',
       },
       // Pattern 3: HH:MM:mmm (dấu : thay vì ,) -> HH:MM,mmm
       {
         'pattern': RegExp(r'^(\d{2}):(\d{2}):(\d{3})$'),
-        'replacement': (Match m) => '00:${m.group(1)}:${m.group(2)},${m.group(3)}',
+        'replacement': (Match m) =>
+            '00:${m.group(1)}:${m.group(2)},${m.group(3)}',
       },
       // Pattern 4: H:MM,mmm -> 0H:MM,mmm
       {
         'pattern': RegExp(r'^(\d):(\d{2}),(\d{3})$'),
-        'replacement': (Match m) => '00:0${m.group(1)}:${m.group(2)},${m.group(3)}',
+        'replacement': (Match m) =>
+            '00:0${m.group(1)}:${m.group(2)},${m.group(3)}',
       },
       // Pattern 5: 00:0MM,mmm (thiếu số 0 ở phút) -> 00:MM,mmm
       {
         'pattern': RegExp(r'^(\d{2}):0(\d{1}),(\d{3})$'),
-        'replacement': (Match m) => '${m.group(1)}:0${m.group(2)},${m.group(3)}',
+        'replacement': (Match m) =>
+            '${m.group(1)}:0${m.group(2)},${m.group(3)}',
       },
       // Pattern 6: 00:0MM:mmm (thiếu số 0 ở phút + dấu : thay vì ,) -> 00:0MM,mmm
       {
         'pattern': RegExp(r'^(\d{2}):0(\d{1}):(\d{3})$'),
-        'replacement': (Match m) => '${m.group(1)}:0${m.group(2)},${m.group(3)}',
+        'replacement': (Match m) =>
+            '${m.group(1)}:0${m.group(2)},${m.group(3)}',
       },
       // Pattern 7: 00:MMM,mmm (3 chữ số phút - lỗi format) -> 00:0M:MM,mmm
       {
@@ -636,10 +589,14 @@ class SrtParser {
     final seconds = int.tryParse(match.group(3)!) ?? -1;
     final milliseconds = int.tryParse(match.group(4)!) ?? -1;
 
-    return (hours >= 0 && hours <= 99 &&
-            minutes >= 0 && minutes <= 59 &&
-            seconds >= 0 && seconds <= 59 &&
-            milliseconds >= 0 && milliseconds <= 999);
+    return (hours >= 0 &&
+        hours <= 99 &&
+        minutes >= 0 &&
+        minutes <= 59 &&
+        seconds >= 0 &&
+        seconds <= 59 &&
+        milliseconds >= 0 &&
+        milliseconds <= 999);
   }
 
   static int? _timeToMilliseconds(String timeStr) {
@@ -666,8 +623,8 @@ class SrtParser {
     final milliseconds = ms % 1000;
 
     return '${hours.toString().padLeft(2, '0')}:'
-           '${minutes.toString().padLeft(2, '0')}:'
-           '${seconds.toString().padLeft(2, '0')},'
-           '${milliseconds.toString().padLeft(3, '0')}';
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')},'
+        '${milliseconds.toString().padLeft(3, '0')}';
   }
 }
