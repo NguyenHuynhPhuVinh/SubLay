@@ -87,8 +87,16 @@ class SrtParser {
       final times = _parseTimeRange(timeRange);
       if (times == null) return null;
       
-      // Parse text (can be multiple lines)
-      final text = lines.skip(2).join('\n').trim();
+      // Parse text (can be multiple lines) - kiểm tra format đặc biệt trước
+      final textLines = lines.skip(2).toList();
+      final originalText = textLines.join('\n').trim();
+
+      // Kiểm tra xem có phải format đặc biệt với dấu > không
+      final rawText = _isSpecialQuoteFormat(originalText)
+          ? originalText  // Giữ nguyên ngắt dòng cho format đặc biệt
+          : textLines.join(' ').trim(); // Gộp thành 1 dòng cho format thường
+
+      final text = _processSubtitleText(rawText);
       
       return SrtSubtitle(
         index: index,
@@ -151,7 +159,8 @@ class SrtParser {
       
       buffer.writeln(subtitle.index);
       buffer.writeln('${formatTime(subtitle.startTime)} --> ${formatTime(subtitle.endTime)}');
-      buffer.writeln(subtitle.text);
+      // Đảm bảo text được xử lý và ngắt dòng phù hợp
+      buffer.writeln(_processSubtitleText(subtitle.text));
       
       if (i < subtitles.length - 1) {
         buffer.writeln();
@@ -189,15 +198,219 @@ class SrtParser {
   }
 
   static String cleanSrtText(String text) {
-    // Remove HTML tags and clean up text
-    return text
-        .replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
-        .replaceAll(RegExp(r'\{[^}]*\}'), '') // Remove formatting tags
-        .replaceAll(RegExp(r'\s+'), ' ') // Normalize whitespace
-        .trim();
+    // Sử dụng hàm xử lý subtitle mới để làm sạch text
+    return _processSubtitleText(text);
   }
 
+  // Xử lý nội dung subtitle sau khi gộp thành 1 dòng và ngắt dòng phù hợp
+  static String _processSubtitleText(String text) {
+    if (text.isEmpty) return text;
 
+    // Kiểm tra xem có phải format đặc biệt với dấu > không
+    if (_isSpecialQuoteFormat(text)) {
+      return _processSpecialQuoteFormat(text);
+    }
+
+    // Bước 1: Loại bỏ các thẻ HTML và formatting
+    String processedText = text
+        .replaceAll(RegExp(r'<[^>]*>'), '') // Loại bỏ HTML tags
+        .replaceAll(RegExp(r'\{[^}]*\}'), '') // Loại bỏ formatting tags như {an8}
+        .replaceAll(RegExp(r'\[[^\]]*\]'), ''); // Loại bỏ các thẻ trong ngoặc vuông
+
+    // Bước 2: Chuẩn hóa khoảng trắng - gộp nhiều khoảng trắng thành 1
+    processedText = processedText.replaceAll(RegExp(r'\s+'), ' ');
+
+    // Bước 3: Xử lý dấu câu - đảm bảo có khoảng trắng sau dấu câu
+    processedText = processedText.replaceAllMapped(
+      RegExp(r'([.!?,:;])([^\s])'),
+      (match) => '${match.group(1)} ${match.group(2)}', // Thêm space sau dấu câu
+    );
+    processedText = processedText.replaceAllMapped(
+      RegExp(r'\s+([.!?,:;])'),
+      (match) => '${match.group(1)}', // Loại bỏ space trước dấu câu
+    );
+
+    // Bước 4: Xử lý dấu ngoặc
+    processedText = processedText
+        .replaceAll(RegExp(r'\(\s+'), '(') // Loại bỏ space sau dấu mở ngoặc
+        .replaceAll(RegExp(r'\s+\)'), ')') // Loại bỏ space trước dấu đóng ngoặc
+        .replaceAll(RegExp(r'\[\s+'), '[') // Loại bỏ space sau dấu mở ngoặc vuông
+        .replaceAll(RegExp(r'\s+\]'), ']'); // Loại bỏ space trước dấu đóng ngoặc vuông
+
+    // Bước 5: Xử lý dấu gạch nối và gạch dài
+    processedText = processedText
+        .replaceAll(RegExp(r'\s*-\s*'), ' - ') // Chuẩn hóa dấu gạch nối
+        .replaceAll(RegExp(r'\s*—\s*'), ' — '); // Chuẩn hóa dấu gạch dài
+
+    // Bước 6: Loại bỏ khoảng trắng thừa ở đầu và cuối
+    processedText = processedText.trim();
+
+    // Bước 7: Xử lý các trường hợp đặc biệt
+    // Loại bỏ các ký tự điều khiển không mong muốn
+    processedText = processedText.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
+
+    // Bước 8: Đảm bảo không có khoảng trắng kép
+    processedText = processedText.replaceAll(RegExp(r'\s{2,}'), ' ');
+
+    // Bước 9: Ngắt dòng thông minh sau khi đã gộp và xử lý
+    processedText = _smartLineBreaking(processedText);
+
+    return processedText.trim();
+  }
+
+  // Hàm ngắt dòng thông minh cho subtitle
+  static String _smartLineBreaking(String text) {
+    if (text.isEmpty) return text;
+
+    // Cấu hình ngắt dòng
+    const int maxLineLength = 42; // Độ dài tối đa mỗi dòng (chuẩn subtitle)
+    const int maxLines = 2; // Tối đa 2 dòng cho subtitle
+
+    // Nếu text ngắn hơn maxLineLength, giữ nguyên 1 dòng
+    if (text.length <= maxLineLength) {
+      return text;
+    }
+
+    // Tách text thành các từ
+    final words = text.split(' ');
+    if (words.length <= 1) {
+      // Nếu chỉ có 1 từ dài, cắt cứng
+      return _hardBreakLongWord(text, maxLineLength);
+    }
+
+    // Thử ngắt dòng thông minh
+    final lines = <String>[];
+    String currentLine = '';
+
+    for (int i = 0; i < words.length; i++) {
+      final word = words[i];
+      final testLine = currentLine.isEmpty ? word : '$currentLine $word';
+
+      // Kiểm tra xem có thể thêm từ này vào dòng hiện tại không
+      if (testLine.length <= maxLineLength) {
+        currentLine = testLine;
+      } else {
+        // Không thể thêm từ này, kết thúc dòng hiện tại
+        if (currentLine.isNotEmpty) {
+          lines.add(currentLine);
+          currentLine = word;
+        } else {
+          // Từ này quá dài cho 1 dòng, cắt cứng
+          final brokenWord = _hardBreakLongWord(word, maxLineLength);
+          final brokenLines = brokenWord.split('\n');
+          lines.addAll(brokenLines.take(brokenLines.length - 1));
+          currentLine = brokenLines.last;
+        }
+
+        // Nếu đã đạt số dòng tối đa, gộp phần còn lại vào dòng cuối
+        if (lines.length >= maxLines - 1) {
+          final remainingWords = words.skip(i + 1).toList();
+          if (remainingWords.isNotEmpty) {
+            final remainingText = remainingWords.join(' ');
+            currentLine = currentLine.isEmpty ? remainingText : '$currentLine $remainingText';
+          }
+          break;
+        }
+      }
+    }
+
+    // Thêm dòng cuối cùng
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine);
+    }
+
+    // Giới hạn số dòng tối đa
+    final finalLines = lines.take(maxLines).toList();
+
+    // Nếu có quá nhiều dòng, gộp dòng cuối
+    if (lines.length > maxLines) {
+      final lastLine = finalLines.last;
+      final extraLines = lines.skip(maxLines).join(' ');
+      finalLines[finalLines.length - 1] = '$lastLine $extraLines';
+    }
+
+    return finalLines.join('\n');
+  }
+
+  // Cắt cứng từ quá dài
+  static String _hardBreakLongWord(String word, int maxLength) {
+    if (word.length <= maxLength) return word;
+
+    final lines = <String>[];
+    for (int i = 0; i < word.length; i += maxLength) {
+      final end = (i + maxLength < word.length) ? i + maxLength : word.length;
+      lines.add(word.substring(i, end));
+    }
+    return lines.join('\n');
+  }
+
+  // Kiểm tra xem có phải format đặc biệt với dấu > không
+  static bool _isSpecialQuoteFormat(String text) {
+    final lines = text.split('\n');
+    if (lines.length < 2) return false;
+
+    // Kiểm tra xem có ít nhất 2 dòng bắt đầu bằng dấu > không
+    int quoteLineCount = 0;
+    for (final line in lines) {
+      final trimmedLine = line.trim();
+      if (trimmedLine.startsWith('>')) {
+        quoteLineCount++;
+      }
+    }
+
+    // Nếu có ít nhất 2 dòng bắt đầu bằng >, coi là format đặc biệt
+    return quoteLineCount >= 2;
+  }
+
+  // Xử lý format đặc biệt với dấu > - giữ nguyên ngắt dòng
+  static String _processSpecialQuoteFormat(String text) {
+    final lines = text.split('\n');
+    final processedLines = <String>[];
+
+    for (final line in lines) {
+      String processedLine = line.trim();
+
+      // Loại bỏ các thẻ HTML và formatting nhưng giữ nguyên cấu trúc dòng
+      processedLine = processedLine
+          .replaceAll(RegExp(r'<[^>]*>'), '') // Loại bỏ HTML tags
+          .replaceAll(RegExp(r'\{[^}]*\}'), '') // Loại bỏ formatting tags
+          .replaceAll(RegExp(r'\[[^\]]*\]'), ''); // Loại bỏ các thẻ trong ngoặc vuông
+
+      // Chuẩn hóa khoảng trắng trong dòng
+      processedLine = processedLine.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+      // Xử lý dấu câu cho từng dòng bằng replaceAllMapped
+      processedLine = processedLine.replaceAllMapped(
+        RegExp(r'([.!?,:;])([^\s])'),
+        (match) => '${match.group(1)} ${match.group(2)}',
+      );
+      processedLine = processedLine.replaceAllMapped(
+        RegExp(r'\s+([.!?,:;])'),
+        (match) => '${match.group(1)}',
+      );
+
+      // Xử lý dấu ngoặc
+      processedLine = processedLine
+          .replaceAll(RegExp(r'\(\s+'), '(')
+          .replaceAll(RegExp(r'\s+\)'), ')')
+          .replaceAll(RegExp(r'\[\s+'), '[')
+          .replaceAll(RegExp(r'\s+\]'), ']');
+
+      // Xử lý dấu gạch nối
+      processedLine = processedLine
+          .replaceAll(RegExp(r'\s*-\s*'), ' - ')
+          .replaceAll(RegExp(r'\s*—\s*'), ' — ');
+
+      // Loại bỏ ký tự điều khiển
+      processedLine = processedLine.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
+
+      if (processedLine.isNotEmpty) {
+        processedLines.add(processedLine);
+      }
+    }
+
+    return processedLines.join('\n').trim();
+  }
 
   // Validate and fix SRT content
   static SrtValidationResult validateAndFixSrt(String content) {

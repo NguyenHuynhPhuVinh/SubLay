@@ -178,6 +178,13 @@ class PromptManagerController extends GetxController {
   Future<void> copyPromptToClipboard(PromptModel prompt) async {
     try {
       await Clipboard.setData(ClipboardData(text: prompt.content));
+      Get.snackbar(
+        'Thành công',
+        'Đã copy prompt vào clipboard',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
     } catch (e) {
       Get.snackbar(
         'Lỗi',

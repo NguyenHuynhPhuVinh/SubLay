@@ -153,8 +153,8 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
             AutoSizeText(
               subtitle,
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontSize: 16, // Giảm từ 22 xuống 16
+                fontWeight: FontWeight.w600, // Giảm từ w700 xuống w600
                 height: 1.3,
                 letterSpacing: 0.5,
                 foreground: Paint()
@@ -166,8 +166,8 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
               ),
               textAlign: TextAlign.center,
               maxLines: 5,
-              minFontSize: 12,
-              maxFontSize: 20,
+              minFontSize: 10, // Giảm từ 16 xuống 10
+              maxFontSize: 18, // Giảm từ 26 xuống 18
               overflow: TextOverflow.ellipsis,
               wrapWords: true,
             ),
@@ -176,15 +176,15 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
               subtitle,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontSize: 16, // Giảm từ 22 xuống 16
+                fontWeight: FontWeight.w600, // Giảm từ w700 xuống w600
                 height: 1.3,
                 letterSpacing: 0.5,
               ),
               textAlign: TextAlign.center,
               maxLines: 5,
-              minFontSize: 12,
-              maxFontSize: 20,
+              minFontSize: 10, // Giảm từ 16 xuống 10
+              maxFontSize: 18, // Giảm từ 26 xuống 18
               overflow: TextOverflow.ellipsis,
               wrapWords: true,
             ),
@@ -236,8 +236,8 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
             controller.currentSubtitle.value,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16, // Tăng lại lên 16 vì AutoSizeText sẽ tự điều chỉnh
-              fontWeight: FontWeight.w500,
+              fontSize: 14, // Giảm từ 18 xuống 14
+              fontWeight: FontWeight.w500, // Giảm từ w600 xuống w500
               height: 1.4, // Thêm line height
               shadows: [
                 Shadow(
@@ -249,8 +249,8 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
             ),
             textAlign: TextAlign.center,
             maxLines: 5, // Tăng từ 4 lên 5 lines
-            minFontSize: 12, // Font size tối thiểu
-            maxFontSize: 18, // Font size tối đa
+            minFontSize: 10, // Giảm font size tối thiểu từ 14 xuống 10
+            maxFontSize: 16, // Giảm font size tối đa từ 20 xuống 16
             overflow: TextOverflow.ellipsis,
             wrapWords: true, // Quan trọng: cho phép wrap words thông minh
           ),
