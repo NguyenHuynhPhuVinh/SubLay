@@ -1,315 +1,106 @@
-# 🎬 DuTupSRT - Ứng dụng xem YouTube với phụ đề SRT tùy chỉnh
+# **SubLay**
 
-> Ứng dụng Flutter hiện đại cho phép xem video YouTube với phụ đề SRT tùy chỉnh, mang đến trải nghiệm xem video tuyệt vời.
+🎬 Xem video YouTube với phụ đề `.srt` tùy chỉnh, đồng bộ hoàn hảo theo ý muốn của bạn.
 
-## ✨ Tính năng chính
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/nguyenhuynhphuvinh/dutup-srt)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Flutter Version](https://img.shields.io/badge/Flutter-3.x-blue)](https://flutter.dev)
+[![Platforms](https://img.shields.io/badge/platform-Android%20|%20iOS%20|%20Web%20|%20Desktop-lightgrey)](https://flutter.dev)
 
-- 📺 **YouTube Player** - Phát video YouTube toàn màn hình
-- 📄 **SRT Support** - Upload file SRT hoặc paste nội dung phụ đề
-- 🎬 **Subtitle Overlay** - Hiển thị phụ đề chồng lên video
-- ⚙️ **Subtitle Controls** - Điều chỉnh timing, style, vị trí phụ đề
-- 📚 **Video History** - Lưu lịch sử video đã xem với phụ đề
-- 🎨 **Modern UI** - Material Design 3 với dark/light mode
+**SubLay** là một ứng dụng đa nền tảng được xây dựng bằng Flutter, giải quyết vấn đề xem video YouTube với các tệp phụ đề `.srt` bên ngoài. Dễ dàng tải lên tệp phụ đề hoặc dán trực tiếp nội dung để có trải nghiệm xem phim, học tập và giải trí không giới hạn.
 
-## 🏗️ Kiến trúc dự án
+*<-- (Đề xuất: Thêm ảnh GIF minh họa ứng dụng hoạt động tại đây) -->*
 
-### Cấu trúc thư mục
+## ✨ Tính năng nổi bật
 
-```
-lib/
-├── main.dart                           # Entry point
-├── app/
-    ├── routes/                         # Navigation management
-    │   ├── app_pages.dart             # Route definitions & bindings
-    │   └── app_routes.dart            # Route constants
-    └── modules/                       # Feature modules (Clean Architecture)
-        ├── main_screen/               # 🏠 Main navigation container
-        │   ├── controllers/           # Business logic
-        │   ├── bindings/             # Dependency injection
-        │   └── views/                # UI components
-        ├── video_input/               # 📺 YouTube URL & SRT input
-        ├── video_player/              # 🎬 YouTube player với subtitle overlay
-        ├── subtitle_editor/           # ✏️ Chỉnh sửa phụ đề
-        ├── recent_videos/             # 📚 Lịch sử video đã xem
-        └── app_settings/              # ⚙️ Cài đặt ứng dụng
-```
+*   📺 **Trình phát YouTube tích hợp:** Trải nghiệm xem video mượt mà, toàn màn hình ngay trong ứng dụng.
+*   📂 **Hỗ trợ phụ đề SRT linh hoạt:** Dễ dàng tải lên tệp `.srt` từ thiết bị hoặc dán trực tiếp nội dung phụ đề.
+*   ️✨ **Lớp phủ phụ đề mượt mà:** Phụ đề được hiển thị đè lên video một cách chuyên nghiệp, không che khuất nội dung quan trọng.
+*   ️️⚙️ **Tùy chỉnh phụ đề chuyên sâu:** Điều chỉnh thời gian (timing), kiểu chữ và vị trí của phụ đề để đồng bộ hoàn hảo.
+*   💾 **Lịch sử xem thông minh:** Tự động lưu lại các video đã xem cùng với phụ đề để dễ dàng truy cập lại.
+*   🎨 **Giao diện hiện đại:** Thiết kế theo chuẩn Material Design 3, hỗ trợ cả chế độ Sáng (Light) và Tối (Dark).
 
-### Nguyên tắc thiết kế
+## 📱 Nền tảng hỗ trợ
 
-#### 🎯 **Clean Architecture + MVC Pattern**
+Ứng dụng được xây dựng với Flutter và hỗ trợ các nền tảng sau:
 
-- **Separation of Concerns**: Tách biệt UI, Business Logic và Data
-- **SOLID Principles**: Code dễ maintain và mở rộng
-- **Dependency Injection**: Quản lý dependencies tự động
+-   [x] Android
+-   [x] iOS
+-   [x] Web
+-   [x] Windows
+-   [x] macOS
+-   [x] Linux
 
-#### 📱 **Reactive Programming với GetX**
+## 🏗️ Kiến trúc & Công nghệ
 
-```dart
-// State Management
-final novels = <Novel>[].obs;           // Observable data
-final isLoading = false.obs;            // Loading state
+Dự án được xây dựng dựa trên các nguyên tắc và công nghệ hiện đại để đảm bảo hiệu suất, khả năng bảo trì và mở rộng:
 
-// Reactive UI
-Obx(() => controller.isLoading.value
-  ? LoadingWidget()
-  : NovelGrid()
-)
-```
+*   **Kiến trúc:** Clean Architecture kết hợp với mô hình **MVC (Model-View-Controller)** giúp tách biệt rõ ràng các lớp logic, giao diện và dữ liệu.
+*   **Quản lý trạng thái:** **GetX** được sử dụng làm giải pháp toàn diện cho State Management, Dependency Injection và Navigation.
+*   **Lưu trữ cục bộ:** **Hive** được chọn làm cơ sở dữ liệu NoSQL hiệu suất cao để lưu trữ lịch sử video và cài đặt người dùng.
+*   **Thành phần cốt lõi:**
+    *   **Framework:** Flutter & Dart
+    *   **Video Player:** `youtube_player_iframe`
+    *   **Xử lý phụ đề:** `subtitle` & `srt_parser` tùy chỉnh
+    *   **Giao diện:** Material 3, GetWidget, Iconsax
+    *   **Network:** Dio
 
-#### 🔗 **Dependency Injection với Bindings**
-
-```dart
-class LibraryBinding extends Bindings {
-  @override
-  void dependencies() {
-    // Lazy loading - chỉ tạo khi cần
-    Get.lazyPut<LibraryController>(() => LibraryController());
-    Get.lazyPut<NovelService>(() => NovelService());
-  }
-}
-```
-
-## 🛠️ Tech Stack
-
-### Core Framework
-
-- **Flutter** - Cross-platform UI framework
-- **Dart** - Programming language
-
-### State Management & Navigation
-
-- **GetX** - State management, routing, dependency injection
-- **Get** - Navigation và dialog management
-
-### UI Components
-
-- **GetWidget** - Rich UI component library
-- **Google Nav Bar** - Modern bottom navigation
-- **Iconsax** - Beautiful icon set
-- **Material Design 3** - Modern design system
-
-### Data & Storage
-
-- **Hive** - Fast NoSQL database
-- **Hive Flutter** - Flutter integration
-- **Flutter Secure Storage** - Secure data storage
-
-### Video & YouTube
-
-- **YouTube Player Flutter** - YouTube video player widget
-- **Video Player** - Flutter video player support
-- **Subtitle** - SRT subtitle parsing and processing
-
-### Network & File Processing
-
-- **Dio** - Powerful HTTP client
-- **File Picker** - File selection from device
-- **Permission Handler** - Handle device permissions
-- **Connectivity Plus** - Network status monitoring
-
-### UI Enhancements
-
-- **Shimmer** - Loading skeleton effects
-- **Liquid Pull to Refresh** - Beautiful refresh indicator
-- **Smooth Page Indicator** - Page indicators
-- **Auto Size Text** - Responsive text sizing
-- **Cached Network Image** - Image caching and optimization
-
-### Utilities
-
-- **URL Launcher** - Open external links
-- **Flutter SVG** - SVG image support
-
-## 🚀 Cài đặt và chạy dự án
+## 🚀 Bắt đầu
 
 ### Yêu cầu hệ thống
 
-- Flutter SDK >= 3.8.1
-- Dart SDK >= 3.0.0
-- Android Studio / VS Code
-- Git
+-   Flutter SDK >= 3.8.1
+-   Dart SDK >= 3.0.0
+-   Môi trường phát triển: Android Studio / VS Code
 
 ### Các bước cài đặt
 
-1. **Clone repository**
+1.  **Clone repository:**
+    ```bash
+    git clone https://github.com/nguyenhuynhphuvinh/dutup-srt.git
+    cd dutup-srt
+    ```
 
-```bash
-git clone https://github.com/your-username/dutup-srt.git
-cd dutup-srt
-```
+2.  **Cài đặt các gói phụ thuộc:**
+    ```bash
+    flutter pub get
+    ```
 
-2. **Cài đặt dependencies**
+3.  **Tạo mã nguồn tự động (cho Hive):**
+    ```bash
+    flutter pub run build_runner build --delete-conflicting-outputs
+    ```
 
-```bash
-flutter pub get
-```
+4.  **Chạy ứng dụng:**
+    ```bash
+    flutter run
+    ```
 
-3. **Chạy code generation (cho Hive)**
+## 🤝 Đóng góp
 
-```bash
-flutter packages pub run build_runner build
-```
+Chúng tôi luôn chào đón các đóng góp để làm cho ứng dụng tốt hơn! Vui lòng tuân thủ quy trình sau:
 
-4. **Chạy ứng dụng**
+1.  **Fork** repository này.
+2.  Tạo một nhánh mới (`git checkout -b feature/tinh-nang-moi`).
+3.  Thực hiện các thay đổi và **commit** (`git commit -m 'Thêm một tính năng tuyệt vời'`).
+4.  **Push** lên nhánh của bạn (`git push origin feature/tinh-nang-moi`).
+5.  Mở một **Pull Request**.
 
-```bash
-flutter run
-```
+Nếu bạn phát hiện lỗi, vui lòng tạo một **Issue** trên GitHub.
 
-## 📋 Scripts hữu ích
+## 📄 Giấy phép
 
-```bash
-# Cài đặt dependencies
-flutter pub get
+Dự án này được cấp phép theo **MIT License**. Xem chi tiết tại file `LICENSE`.
 
-# Chạy code generation
-flutter packages pub run build_runner build
+## 🙏 Lời cảm ơn
 
-# Clean và rebuild
-flutter clean && flutter pub get
-
-# Chạy tests
-flutter test
-
-# Build APK
-flutter build apk --release
-
-# Build iOS
-flutter build ios --release
-```
-
-## 🏛️ Kiến trúc chi tiết
-
-### 📦 Module Structure
-
-Mỗi module trong dự án tuân theo pattern **MVC + Dependency Injection**:
-
-```
-module_name/
-├── controllers/           # Business Logic Layer
-│   └── module_controller.dart
-├── bindings/             # Dependency Injection
-│   └── module_binding.dart
-└── views/                # Presentation Layer
-    └── module_view.dart
-```
-
-### 🔄 Data Flow
-
-```
-User Action → View → Controller → Business Logic → Update State → View Auto-Update
-```
-
-### 🎯 Dependency Injection Flow
-
-```
-Route Called → Binding.dependencies() → Controller Created → View Uses Controller → Route Closed → Controller Auto-Disposed
-```
-
-## 📱 Screens Overview
-
-### 🏠 Main Screen (Navigation Container)
-
-- **Controller**: Quản lý tab navigation cho 5 tabs
-- **View**: Google Nav Bar với responsive design
-- **Features**: Smooth transitions, state persistence
-
-### 📺 Video Input (YouTube & SRT Input)
-
-- **Controller**: Validate YouTube URL, handle SRT file/content
-- **View**: URL input field, file picker, text area
-- **Features**: URL validation, file upload, paste content
-
-### 🎬 Video Player (YouTube Player với Subtitle)
-
-- **Controller**: YouTube player control, subtitle synchronization
-- **View**: Fullscreen player với subtitle overlay
-- **Features**: Play/pause, seek, fullscreen, subtitle display
-
-### ✏️ Subtitle Editor (Chỉnh sửa phụ đề)
-
-- **Controller**: Edit subtitle timing và content
-- **View**: Timeline editor với preview
-- **Features**: Timing adjustment, text editing, preview
-
-### 📚 Recent Videos (Lịch sử video)
-
-- **Controller**: Lưu trữ và quản lý lịch sử
-- **View**: Grid layout với video thumbnails
-- **Features**: History tracking, quick replay
-
-### ⚙️ App Settings (Cài đặt ứng dụng)
-
-- **Controller**: App preferences, subtitle styling
-- **View**: Organized settings groups
-- **Features**: Theme toggle, subtitle appearance, player settings
-
-## 🔧 Development Guidelines
-
-### 📝 Code Style
-
-- **Naming**: camelCase cho variables, PascalCase cho classes
-- **Comments**: Tiếng Việt cho business logic, English cho technical
-- **Structure**: Một file một class, tối đa 300 lines
-
-### 🧪 Testing Strategy
-
-```bash
-# Unit Tests - Business Logic
-test/unit/controllers/
-
-# Widget Tests - UI Components
-test/widget/views/
-
-# Integration Tests - Full Flow
-test/integration/
-```
-
-### 🚀 Performance Best Practices
-
-- **Lazy Loading**: Controllers chỉ tạo khi cần
-- **Memory Management**: Auto-dispose với GetX
-- **Image Caching**: CachedNetworkImage cho performance
-- **Database**: Hive cho fast local storage
-
-## 🤝 Contributing
-
-### 📋 Development Workflow
-
-1. **Fork** repository
-2. **Create** feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** changes: `git commit -m 'Add amazing feature'`
-4. **Push** branch: `git push origin feature/amazing-feature`
-5. **Open** Pull Request
-
-### 🐛 Bug Reports
-
-Sử dụng GitHub Issues với template:
-
-- **Environment**: Flutter version, device info
-- **Steps to reproduce**: Chi tiết các bước
-- **Expected vs Actual**: Kết quả mong đợi vs thực tế
-- **Screenshots**: Nếu có
-
-## 📄 License
-
-Dự án này được phân phối dưới MIT License. Xem `LICENSE` file để biết thêm chi tiết.
-
-## 👥 Team
-
-- **Developer**: Your Name
-- **UI/UX**: Design Team
-- **QA**: Testing Team
-
-## 🙏 Acknowledgments
-
-- **Flutter Team** - Amazing framework
-- **GetX Community** - Powerful state management
-- **Open Source Contributors** - All the amazing libraries
+*   Cảm ơn đội ngũ **Flutter** đã tạo ra một framework tuyệt vời.
+*   Cảm ơn cộng đồng **GetX** vì những giải pháp quản lý trạng thái mạnh mẽ.
+*   Xin cảm ơn tất cả các tác giả của những thư viện mã nguồn mở đã được sử dụng trong dự án này.
 
 ---
 
 <div align="center">
   <p>Made with ❤️ and Flutter</p>
-  <p>⭐ Star this repo if you find it helpful!</p>
+  <p>⭐ Hãy gắn sao cho repo này nếu bạn thấy nó hữu ích!</p>
 </div>
