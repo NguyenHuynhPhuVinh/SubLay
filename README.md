@@ -2,14 +2,11 @@
 
 🎬 Xem video YouTube với phụ đề `.srt` tùy chỉnh, đồng bộ hoàn hảo theo ý muốn của bạn.
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/nguyenhuynhphuvinh/dutup-srt)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/nguyenhuynhphuvinh/sublay)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Flutter Version](https://img.shields.io/badge/Flutter-3.x-blue)](https://flutter.dev)
-[![Platforms](https://img.shields.io/badge/platform-Android%20|%20iOS%20|%20Web%20|%20Desktop-lightgrey)](https://flutter.dev)
 
 **SubLay** là một ứng dụng đa nền tảng được xây dựng bằng Flutter, giải quyết vấn đề xem video YouTube với các tệp phụ đề `.srt` bên ngoài. Dễ dàng tải lên tệp phụ đề hoặc dán trực tiếp nội dung để có trải nghiệm xem phim, học tập và giải trí không giới hạn.
-
-*<-- (Đề xuất: Thêm ảnh GIF minh họa ứng dụng hoạt động tại đây) -->*
 
 ## ✨ Tính năng nổi bật
 
@@ -25,11 +22,11 @@
 Ứng dụng được xây dựng với Flutter và hỗ trợ các nền tảng sau:
 
 -   [x] Android
--   [x] iOS
--   [x] Web
--   [x] Windows
--   [x] macOS
--   [x] Linux
+-   [ ] iOS
+-   [ ] Web
+-   [ ] Windows
+-   [ ] macOS
+-   [ ] Linux
 
 ## 🏗️ Kiến trúc & Công nghệ
 
@@ -57,8 +54,8 @@ Dự án được xây dựng dựa trên các nguyên tắc và công nghệ hi
 
 1.  **Clone repository:**
     ```bash
-    git clone https://github.com/nguyenhuynhphuvinh/dutup-srt.git
-    cd dutup-srt
+    git clone https://github.com/nguyenhuynhphuvinh/sublay.git
+    cd sublay
     ```
 
 2.  **Cài đặt các gói phụ thuộc:**
