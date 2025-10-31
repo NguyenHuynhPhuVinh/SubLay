@@ -10,7 +10,7 @@ import '../widgets/srt_validation_widget.dart';
 import '../../../data/models/video_with_subtitle.dart';
 
 class VideoInputView extends GetView<VideoInputController> {
-  const VideoInputView({Key? key}) : super(key: key);
+  const VideoInputView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,36 +21,40 @@ class VideoInputView extends GetView<VideoInputController> {
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         actions: [
-          Obx(() => controller.showVideoList.value
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Clear all button
-                    if (controller.savedVideos.isNotEmpty)
+          Obx(
+            () => controller.showVideoList.value
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Clear all button
+                      if (controller.savedVideos.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(Iconsax.trash),
+                          onPressed: () => _showClearAllDialog(),
+                          tooltip: 'Xóa tất cả video',
+                          color: Colors.red,
+                        ),
+                      // Add new video button
                       IconButton(
-                        icon: const Icon(Iconsax.trash),
-                        onPressed: () => _showClearAllDialog(),
-                        tooltip: 'Xóa tất cả video',
-                        color: Colors.red,
+                        icon: const Icon(Iconsax.add_circle),
+                        onPressed: controller.toggleView,
+                        tooltip: 'Thêm video mới',
                       ),
-                    // Add new video button
-                    IconButton(
-                      icon: const Icon(Iconsax.add_circle),
-                      onPressed: controller.toggleView,
-                      tooltip: 'Thêm video mới',
-                    ),
-                  ],
-                )
-              : IconButton(
-                  icon: const Icon(Iconsax.arrow_left_2),
-                  onPressed: controller.toggleView,
-                  tooltip: 'Quay lại danh sách',
-                )),
+                    ],
+                  )
+                : IconButton(
+                    icon: const Icon(Iconsax.arrow_left_2),
+                    onPressed: controller.toggleView,
+                    tooltip: 'Quay lại danh sách',
+                  ),
+          ),
         ],
       ),
-      body: Obx(() => controller.showVideoList.value
-          ? _buildVideoListView()
-          : _buildVideoInputView()),
+      body: Obx(
+        () => controller.showVideoList.value
+            ? _buildVideoListView()
+            : _buildVideoInputView(),
+      ),
     );
   }
 
@@ -66,12 +70,14 @@ class VideoInputView extends GetView<VideoInputController> {
             decoration: InputDecoration(
               hintText: 'Tìm kiếm video...',
               prefixIcon: const Icon(Iconsax.search_normal),
-              suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Iconsax.close_circle),
-                      onPressed: controller.clearSearch,
-                    )
-                  : const SizedBox.shrink()),
+              suffixIcon: Obx(
+                () => controller.searchQuery.value.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Iconsax.close_circle),
+                        onPressed: controller.clearSearch,
+                      )
+                    : const SizedBox.shrink(),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.r),
               ),
@@ -131,10 +137,7 @@ class VideoInputView extends GetView<VideoInputController> {
             controller.searchQuery.value.isNotEmpty
                 ? 'Thử tìm kiếm với từ khóa khác'
                 : 'Nhấn nút + để thêm video mới',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
@@ -168,43 +171,27 @@ class VideoInputView extends GetView<VideoInputController> {
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.red.withOpacity(0.1),
-            Colors.blue.withOpacity(0.1),
-          ],
+          colors: [Colors.red.withValues(alpha: 0.1), Colors.blue.withValues(alpha: 0.1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1),
       ),
       child: Column(
         children: [
-          Icon(
-            Iconsax.video,
-            size: 48.r,
-            color: Colors.red,
-          ),
+          Icon(Iconsax.video, size: 48.r, color: Colors.red),
           SizedBox(height: 12.h),
           AutoSizeText(
             'Thêm Video với Phụ đề',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
             maxLines: 2,
           ),
           SizedBox(height: 8.h),
           AutoSizeText(
             'Nhập link YouTube và phụ đề SRT để lưu vào danh sách',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
             textAlign: TextAlign.center,
             maxLines: 3,
           ),
@@ -221,7 +208,7 @@ class VideoInputView extends GetView<VideoInputController> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10.r,
             offset: Offset(0, 2.h),
           ),
@@ -232,18 +219,11 @@ class VideoInputView extends GetView<VideoInputController> {
         children: [
           Row(
             children: [
-              Icon(
-                Iconsax.link,
-                size: 20.r,
-                color: Colors.red,
-              ),
+              Icon(Iconsax.link, size: 20.r, color: Colors.red),
               SizedBox(width: 8.w),
               Text(
                 'YouTube URL',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -268,72 +248,65 @@ class VideoInputView extends GetView<VideoInputController> {
                 ),
               ),
               SizedBox(width: 8.w),
-              Obx(() => controller.youtubeUrl.value.isNotEmpty
-                  ? IconButton(
-                      onPressed: controller.clearYouTubeUrl,
-                      icon: const Icon(Iconsax.trash),
-                      color: Colors.red,
-                    )
-                  : const SizedBox()),
+              Obx(
+                () => controller.youtubeUrl.value.isNotEmpty
+                    ? IconButton(
+                        onPressed: controller.clearYouTubeUrl,
+                        icon: const Icon(Iconsax.trash),
+                        color: Colors.red,
+                      )
+                    : const SizedBox(),
+              ),
             ],
           ),
           SizedBox(height: 8.h),
-          Obx(() => controller.isValidUrl.value
-              ? Row(
-                  children: [
-                    Icon(
-                      Iconsax.tick_circle,
-                      size: 16.r,
-                      color: Colors.green,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      'URL hợp lệ',
-                      style: TextStyle(
-                        fontSize: 12.sp,
+          Obx(
+            () => controller.isValidUrl.value
+                ? Row(
+                    children: [
+                      Icon(
+                        Iconsax.tick_circle,
+                        size: 16.r,
                         color: Colors.green,
-                      ),
-                    ),
-                    if (controller.isLoadingVideoInfo.value) ...[
-                      SizedBox(width: 8.w),
-                      SizedBox(
-                        width: 12.r,
-                        height: 12.r,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                        ),
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        'Đang tải thông tin...',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.blue,
-                        ),
+                        'URL hợp lệ',
+                        style: TextStyle(fontSize: 12.sp, color: Colors.green),
                       ),
-                    ],
-                  ],
-                )
-              : controller.youtubeUrl.value.isNotEmpty
-                  ? Row(
-                      children: [
-                        Icon(
-                          Iconsax.close_circle,
-                          size: 16.r,
-                          color: Colors.red,
+                      if (controller.isLoadingVideoInfo.value) ...[
+                        SizedBox(width: 8.w),
+                        SizedBox(
+                          width: 12.r,
+                          height: 12.r,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.blue,
+                            ),
+                          ),
                         ),
                         SizedBox(width: 4.w),
                         Text(
-                          'URL không hợp lệ',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.red,
-                          ),
+                          'Đang tải thông tin...',
+                          style: TextStyle(fontSize: 12.sp, color: Colors.blue),
                         ),
                       ],
-                    )
-                  : const SizedBox()),
+                    ],
+                  )
+                : controller.youtubeUrl.value.isNotEmpty
+                ? Row(
+                    children: [
+                      Icon(Iconsax.close_circle, size: 16.r, color: Colors.red),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'URL không hợp lệ',
+                        style: TextStyle(fontSize: 12.sp, color: Colors.red),
+                      ),
+                    ],
+                  )
+                : const SizedBox(),
+          ),
         ],
       ),
     );
@@ -347,7 +320,7 @@ class VideoInputView extends GetView<VideoInputController> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10.r,
             offset: Offset(0, 2.h),
           ),
@@ -358,18 +331,11 @@ class VideoInputView extends GetView<VideoInputController> {
         children: [
           Row(
             children: [
-              Icon(
-                Iconsax.edit,
-                size: 20.r,
-                color: Colors.orange,
-              ),
+              Icon(Iconsax.edit, size: 20.r, color: Colors.orange),
               SizedBox(width: 8.w),
               Text(
                 'Tên Video',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -389,29 +355,24 @@ class VideoInputView extends GetView<VideoInputController> {
             ),
           ),
           SizedBox(height: 8.h),
-          Obx(() => controller.videoTitle.value.isNotEmpty
-              ? Row(
-                  children: [
-                    Icon(
-                      Iconsax.info_circle,
-                      size: 16.r,
-                      color: Colors.blue,
-                    ),
-                    SizedBox(width: 4.w),
-                    Expanded(
-                      child: Text(
-                        'Tên gốc: ${controller.videoTitle.value}',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.blue,
+          Obx(
+            () => controller.videoTitle.value.isNotEmpty
+                ? Row(
+                    children: [
+                      Icon(Iconsax.info_circle, size: 16.r, color: Colors.blue),
+                      SizedBox(width: 4.w),
+                      Expanded(
+                        child: Text(
+                          'Tên gốc: ${controller.videoTitle.value}',
+                          style: TextStyle(fontSize: 12.sp, color: Colors.blue),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
-                )
-              : const SizedBox()),
+                    ],
+                  )
+                : const SizedBox(),
+          ),
         ],
       ),
     );
@@ -425,7 +386,7 @@ class VideoInputView extends GetView<VideoInputController> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10.r,
             offset: Offset(0, 2.h),
           ),
@@ -436,18 +397,11 @@ class VideoInputView extends GetView<VideoInputController> {
         children: [
           Row(
             children: [
-              Icon(
-                Iconsax.document_text,
-                size: 20.r,
-                color: Colors.blue,
-              ),
+              Icon(Iconsax.document_text, size: 20.r, color: Colors.blue),
               SizedBox(width: 8.w),
               Text(
                 'Phụ đề SRT',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -470,51 +424,48 @@ class VideoInputView extends GetView<VideoInputController> {
                 ),
               ),
               SizedBox(width: 12.w),
-              Obx(() => controller.srtContent.value.isNotEmpty
-                  ? IconButton(
-                      onPressed: controller.clearSrtContent,
-                      icon: const Icon(Iconsax.trash),
-                      color: Colors.red,
-                    )
-                  : const SizedBox()),
+              Obx(
+                () => controller.srtContent.value.isNotEmpty
+                    ? IconButton(
+                        onPressed: controller.clearSrtContent,
+                        icon: const Icon(Iconsax.trash),
+                        color: Colors.red,
+                      )
+                    : const SizedBox(),
+              ),
             ],
           ),
           SizedBox(height: 12.h),
-          Obx(() => controller.srtFileName.value.isNotEmpty
-              ? Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6.r),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Iconsax.document,
-                        size: 16.r,
-                        color: Colors.green,
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          controller.srtFileName.value,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.green[700],
+          Obx(
+            () => controller.srtFileName.value.isNotEmpty
+                ? Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Iconsax.document, size: 16.r, color: Colors.green),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            controller.srtFileName.value,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.green[700],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                )
-              : const SizedBox()),
+                      ],
+                    ),
+                  )
+                : const SizedBox(),
+          ),
           SizedBox(height: 12.h),
           Text(
             'Hoặc dán nội dung SRT:',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
           ),
           SizedBox(height: 8.h),
           TextField(
@@ -522,7 +473,8 @@ class VideoInputView extends GetView<VideoInputController> {
             onChanged: controller.updateSrtContent,
             maxLines: 6,
             decoration: InputDecoration(
-              hintText: 'Dán nội dung SRT vào đây...\n\n1\n00:00:01,000 --> 00:00:04,000\nHello World!',
+              hintText:
+                  'Dán nội dung SRT vào đây...\n\n1\n00:00:01,000 --> 00:00:04,000\nHello World!',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.r),
               ),
@@ -533,12 +485,14 @@ class VideoInputView extends GetView<VideoInputController> {
             ),
           ),
           // SRT Validation Widget
-          Obx(() => controller.srtValidationResult.value != null
-              ? SrtValidationWidget(
-                  validationResult: controller.srtValidationResult.value!,
-                  onFixApplied: controller.applyAutoFix,
-                )
-              : const SizedBox()),
+          Obx(
+            () => controller.srtValidationResult.value != null
+                ? SrtValidationWidget(
+                    validationResult: controller.srtValidationResult.value!,
+                    onFixApplied: controller.applyAutoFix,
+                  )
+                : const SizedBox(),
+          ),
         ],
       ),
     );
@@ -553,7 +507,7 @@ class VideoInputView extends GetView<VideoInputController> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10.r,
             offset: Offset(0, 2.h),
           ),
@@ -576,17 +530,11 @@ class VideoInputView extends GetView<VideoInputController> {
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
                     color: Colors.grey[300],
-                    child: Icon(
-                      Iconsax.video,
-                      color: Colors.grey[600],
-                    ),
+                    child: Icon(Iconsax.video, color: Colors.grey[600]),
                   ),
                   errorWidget: (context, url, error) => Container(
                     color: Colors.grey[300],
-                    child: Icon(
-                      Iconsax.video_slash,
-                      color: Colors.grey[600],
-                    ),
+                    child: Icon(Iconsax.video_slash, color: Colors.grey[600]),
                   ),
                 ),
               ),
@@ -649,11 +597,7 @@ class VideoInputView extends GetView<VideoInputController> {
 
               // Actions
               PopupMenuButton<String>(
-                icon: Icon(
-                  Iconsax.more,
-                  size: 20.r,
-                  color: Colors.grey[600],
-                ),
+                icon: Icon(Iconsax.more, size: 20.r, color: Colors.grey[600]),
                 onSelected: (value) {
                   if (value == 'edit') {
                     controller.editSavedVideo(video);
@@ -693,72 +637,83 @@ class VideoInputView extends GetView<VideoInputController> {
 
   // Build action buttons
   Widget _buildActionButtons() {
-    return Obx(() => Column(
-      children: [
-        // Save button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: controller.canPlayVideo() && !controller.isLoading.value
-                ? controller.saveVideoWithSubtitle
-                : null,
-            icon: controller.isLoading.value
-                ? SizedBox(
-                    width: 20.r,
-                    height: 20.r,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : const Icon(Iconsax.save_2),
-            label: Text(
-              controller.isLoading.value ? 'Đang lưu...' : 'Lưu vào danh sách',
-              style: TextStyle(fontSize: 16.sp),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: controller.canPlayVideo() && !controller.isLoading.value
-                  ? Colors.blue
-                  : Colors.grey,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
+    return Obx(
+      () => Column(
+        children: [
+          // Save button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed:
+                  controller.canPlayVideo() && !controller.isLoading.value
+                  ? controller.saveVideoWithSubtitle
+                  : null,
+              icon: controller.isLoading.value
+                  ? SizedBox(
+                      width: 20.r,
+                      height: 20.r,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Icon(Iconsax.save_2),
+              label: Text(
+                controller.isLoading.value
+                    ? 'Đang lưu...'
+                    : 'Lưu vào danh sách',
+                style: TextStyle(fontSize: 16.sp),
               ),
-              elevation: controller.canPlayVideo() && !controller.isLoading.value ? 4 : 0,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    controller.canPlayVideo() && !controller.isLoading.value
+                    ? Colors.blue
+                    : Colors.grey,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                elevation:
+                    controller.canPlayVideo() && !controller.isLoading.value
+                    ? 4
+                    : 0,
+              ),
             ),
           ),
-        ),
 
-        SizedBox(height: 12.h),
+          SizedBox(height: 12.h),
 
-        // Play button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: controller.canPlayVideo() && !controller.isLoading.value
-                ? controller.playVideoWithSubtitles
-                : null,
-            icon: const Icon(Iconsax.play),
-            label: Text(
-              'Phát ngay',
-              style: TextStyle(fontSize: 16.sp),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: controller.canPlayVideo() && !controller.isLoading.value
-                  ? Colors.green
-                  : Colors.grey,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
+          // Play button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed:
+                  controller.canPlayVideo() && !controller.isLoading.value
+                  ? controller.playVideoWithSubtitles
+                  : null,
+              icon: const Icon(Iconsax.play),
+              label: Text('Phát ngay', style: TextStyle(fontSize: 16.sp)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    controller.canPlayVideo() && !controller.isLoading.value
+                    ? Colors.green
+                    : Colors.grey,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                elevation:
+                    controller.canPlayVideo() && !controller.isLoading.value
+                    ? 4
+                    : 0,
               ),
-              elevation: controller.canPlayVideo() && !controller.isLoading.value ? 4 : 0,
             ),
           ),
-        ),
-      ],
-    ));
+        ],
+      ),
+    );
   }
 
   // Show delete dialog
@@ -805,10 +760,7 @@ class VideoInputView extends GetView<VideoInputController> {
             },
             child: const Text(
               'Xóa tất cả',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ),
         ],

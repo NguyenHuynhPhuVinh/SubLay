@@ -8,10 +8,10 @@ class SrtValidationWidget extends StatelessWidget {
   final VoidCallback? onFixApplied;
 
   const SrtValidationWidget({
-    Key? key,
+    super.key,
     required this.validationResult,
     this.onFixApplied,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +25,9 @@ class SrtValidationWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
               ),
               child: const Row(
                 children: [
@@ -43,7 +43,6 @@ class SrtValidationWidget extends StatelessWidget {
                 ],
               ),
             ),
-
           ],
         ),
       );
@@ -91,7 +90,6 @@ class SrtValidationWidget extends StatelessWidget {
             _buildErrorList(validationResult.silenceGaps, Colors.purple),
             const SizedBox(height: 12),
           ],
-
         ],
       ),
     );
@@ -106,9 +104,9 @@ class SrtValidationWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -127,7 +125,7 @@ class SrtValidationWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -149,9 +147,9 @@ class SrtValidationWidget extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,7 +167,7 @@ class SrtValidationWidget extends StatelessWidget {
                           width: 4,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.6),
+                            color: color.withValues(alpha: 0.6),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -178,7 +176,7 @@ class SrtValidationWidget extends StatelessWidget {
                           child: Text(
                             error,
                             style: TextStyle(
-                              color: color.withOpacity(0.8),
+                              color: color.withValues(alpha: 0.8),
                               fontSize: 12,
                               height: 1.3,
                             ),
@@ -197,7 +195,7 @@ class SrtValidationWidget extends StatelessWidget {
                           child: Text(
                             '... và ${errors.length - 5} lỗi khác',
                             style: TextStyle(
-                              color: color.withOpacity(0.6),
+                              color: color.withValues(alpha: 0.6),
                               fontSize: 12,
                               fontStyle: FontStyle.italic,
                             ),
@@ -227,6 +225,4 @@ class SrtValidationWidget extends StatelessWidget {
       ),
     );
   }
-
-
 }

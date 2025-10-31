@@ -48,10 +48,7 @@ class DuTupSRTApp extends StatelessWidget {
               brightness: Brightness.light,
             ),
             useMaterial3: true,
-            appBarTheme: const AppBarTheme(
-              centerTitle: true,
-              elevation: 0,
-            ),
+            appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
@@ -59,12 +56,9 @@ class DuTupSRTApp extends StatelessWidget {
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
-            appBarTheme: const AppBarTheme(
-              centerTitle: true,
-              elevation: 0,
-            ),
+            appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
           ),
-          initialRoute: AppPages.INITIAL,
+          initialRoute: AppPages.initial,
           getPages: AppPages.routes,
           debugShowCheckedModeBanner: false,
         );
@@ -72,5 +66,3 @@ class DuTupSRTApp extends StatelessWidget {
     );
   }
 }
-
-

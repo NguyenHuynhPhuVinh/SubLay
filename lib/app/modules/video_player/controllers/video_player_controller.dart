@@ -13,7 +13,8 @@ class VideoPlayerController extends GetxController {
   // Services
   final VideoService _historyService = Get.find<VideoService>();
   final AppSettingsService _settingsService = Get.find<AppSettingsService>();
-  final SubtitleSettingsService _subtitleSettings = Get.find<SubtitleSettingsService>();
+  final SubtitleSettingsService _subtitleSettings =
+      Get.find<SubtitleSettingsService>();
 
   // YouTube Player Controller
   YoutubePlayerController? youtubeController;
@@ -102,7 +103,7 @@ class VideoPlayerController extends GetxController {
           'Lỗi',
           'Không thể khởi tạo trình phát video: $e',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.8),
+          backgroundColor: Colors.red.withValues(alpha: 0.8),
           colorText: Colors.white,
         );
       }
@@ -151,17 +152,13 @@ class VideoPlayerController extends GetxController {
     switch (errorCode) {
       case '2':
         errorMessage = 'Video ID không hợp lệ';
-        break;
       case '5':
         errorMessage = 'Video không hỗ trợ phát trên HTML5 player';
-        break;
       case '100':
         errorMessage = 'Video không tìm thấy hoặc đã bị xóa';
-        break;
       case '101':
       case '150':
         errorMessage = 'Video bị hạn chế hoặc không khả dụng ở khu vực của bạn';
-        break;
       default:
         errorMessage = 'Không thể phát video (Mã lỗi: $errorCode)';
     }
@@ -170,7 +167,7 @@ class VideoPlayerController extends GetxController {
       'Lỗi phát video',
       errorMessage,
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red.withOpacity(0.8),
+      backgroundColor: Colors.red.withValues(alpha: 0.8),
       colorText: Colors.white,
       duration: const Duration(seconds: 5),
     );
@@ -187,7 +184,9 @@ class VideoPlayerController extends GetxController {
           final position = await youtubeController!.currentTime;
 
           // Giữ độ chính xác millisecond cho phụ đề
-          final precisePosition = Duration(milliseconds: (position * 1000).toInt());
+          final precisePosition = Duration(
+            milliseconds: (position * 1000).toInt(),
+          );
           currentPosition.value = precisePosition;
 
           // Chỉ cập nhật duration và player state mỗi 500ms để tối ưu performance
@@ -202,7 +201,6 @@ class VideoPlayerController extends GetxController {
 
           // Update subtitle based on current position với độ chính xác cao
           _updateCurrentSubtitle();
-
         } catch (e) {
           // Silent error handling for position updates
         }
@@ -225,13 +223,16 @@ class VideoPlayerController extends GetxController {
 
     // Áp dụng subtitle offset từ settings service
     final adjustedTime = Duration(
-      milliseconds: currentPosition.value.inMilliseconds + _subtitleSettings.subtitleOffset.value
+      milliseconds:
+          currentPosition.value.inMilliseconds +
+          _subtitleSettings.subtitleOffset.value,
     );
 
     // Tối ưu: kiểm tra subtitle hiện tại trước
     if (_lastSubtitleIndex >= 0 && _lastSubtitleIndex < subtitles.length) {
       final currentSub = subtitles[_lastSubtitleIndex];
-      if (adjustedTime >= currentSub.startTime && adjustedTime <= currentSub.endTime) {
+      if (adjustedTime >= currentSub.startTime &&
+          adjustedTime <= currentSub.endTime) {
         // Vẫn trong subtitle hiện tại, không cần tìm lại
         return;
       }
@@ -241,7 +242,8 @@ class VideoPlayerController extends GetxController {
     String newSubtitle = '';
     for (int i = 0; i < subtitles.length; i++) {
       final subtitle = subtitles[i];
-      if (adjustedTime >= subtitle.startTime && adjustedTime <= subtitle.endTime) {
+      if (adjustedTime >= subtitle.startTime &&
+          adjustedTime <= subtitle.endTime) {
         newSubtitle = subtitle.text;
         _lastSubtitleIndex = i;
         break;
@@ -258,10 +260,6 @@ class VideoPlayerController extends GetxController {
       _lastSubtitleIndex = -1;
     }
   }
-
-
-
-
 
   void togglePlayPause() async {
     if (youtubeController != null) {
@@ -398,7 +396,7 @@ class VideoPlayerController extends GetxController {
   }) {
     this.videoId.value = videoId;
     this.youtubeUrl.value = youtubeUrl;
-    this.videoTitle.value = title ?? 'YouTube Video';
+    videoTitle.value = title ?? 'YouTube Video';
     this.srtContent.value = srtContent;
     this.srtFileName.value = srtFileName;
 

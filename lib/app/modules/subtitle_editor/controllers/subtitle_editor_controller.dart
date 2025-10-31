@@ -5,7 +5,8 @@ import '../../../core/services/subtitle_settings_service.dart';
 
 class SubtitleEditorController extends GetxController {
   // Services
-  final SubtitleSettingsService _subtitleSettings = Get.find<SubtitleSettingsService>();
+  final SubtitleSettingsService _subtitleSettings =
+      Get.find<SubtitleSettingsService>();
 
   // Text controllers
   final srtTextController = TextEditingController();
@@ -26,11 +27,6 @@ class SubtitleEditorController extends GetxController {
       srtContent.value = srtTextController.text;
       _parseSubtitles();
     });
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
   }
 
   @override

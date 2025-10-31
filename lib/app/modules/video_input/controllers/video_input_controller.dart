@@ -169,7 +169,7 @@ class VideoInputController extends GetxController {
         'Lỗi',
         'Không thể đọc file SRT: $e',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     } finally {
@@ -271,7 +271,7 @@ class VideoInputController extends GetxController {
             'Lỗi',
             'Không thể lưu video: $e',
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red.withOpacity(0.8),
+            backgroundColor: Colors.red.withValues(alpha: 0.8),
             colorText: Colors.white,
           );
         } finally {
@@ -308,7 +308,7 @@ class VideoInputController extends GetxController {
           'Lỗi',
           'Không thể trích xuất ID video từ URL',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.8),
+          backgroundColor: Colors.red.withValues(alpha: 0.8),
           colorText: Colors.white,
         );
       }
@@ -317,7 +317,7 @@ class VideoInputController extends GetxController {
         'Thiếu thông tin',
         'Vui lòng nhập URL YouTube và nội dung SRT',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange.withOpacity(0.8),
+        backgroundColor: Colors.orange.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     }
@@ -360,7 +360,7 @@ class VideoInputController extends GetxController {
         'Lỗi',
         'Không thể xóa tất cả video: $e',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     }
@@ -375,7 +375,7 @@ class VideoInputController extends GetxController {
         'Lỗi',
         'Không thể xóa video: $e',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     }
@@ -417,11 +417,6 @@ class VideoInputController extends GetxController {
     searchController.addListener(() {
       searchVideos(searchController.text);
     });
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
   }
 
   @override

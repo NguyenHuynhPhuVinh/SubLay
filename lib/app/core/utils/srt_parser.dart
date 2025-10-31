@@ -613,18 +613,4 @@ class SrtParser {
 
     return (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds;
   }
-
-  static String _millisecondsToTime(int ms) {
-    final hours = ms ~/ 3600000;
-    ms %= 3600000;
-    final minutes = ms ~/ 60000;
-    ms %= 60000;
-    final seconds = ms ~/ 1000;
-    final milliseconds = ms % 1000;
-
-    return '${hours.toString().padLeft(2, '0')}:'
-        '${minutes.toString().padLeft(2, '0')}:'
-        '${seconds.toString().padLeft(2, '0')},'
-        '${milliseconds.toString().padLeft(3, '0')}';
-  }
 }

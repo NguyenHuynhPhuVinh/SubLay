@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:iconsax/iconsax.dart';
@@ -8,7 +7,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../controllers/video_player_controller.dart';
 
 class VideoPlayerView extends GetView<VideoPlayerController> {
-  const VideoPlayerView({Key? key}) : super(key: key);
+  const VideoPlayerView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -58,10 +57,12 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
   }
 
   Widget _buildNormalPlayer() {
-    return WillPopScope(
-      onWillPop: () async {
-        print('WillPop triggered in normal mode');
-        return true; // Allow back navigation
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          print('Pop invoked in normal mode');
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -84,7 +85,7 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
         body: Column(
           children: [
             // Video player
-            Container(
+            SizedBox(
               width: double.infinity,
               height: 250,
               child: _buildVideoPlayer(),
@@ -101,16 +102,18 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
   }
 
   Widget _buildFullScreenPlayer() {
-    return WillPopScope(
-      onWillPop: () async {
-        print('WillPop triggered in fullscreen mode');
-        return true; // Allow back navigation
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          print('Pop invoked in fullscreen mode');
+        }
       },
       child: Scaffold(
         backgroundColor: Colors.black,
         extendBodyBehindAppBar: true,
         extendBody: true,
-        body: Container(
+        body: SizedBox(
           width: double.infinity,
           height: double.infinity,
           child: Stack(
@@ -225,10 +228,10 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
         height: 150, // Tăng từ 120 lên 150
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.8),
+          color: Colors.black.withValues(alpha: 0.8),
           border: Border(
-            top: BorderSide(color: Colors.grey.withOpacity(0.3)),
-            bottom: BorderSide(color: Colors.grey.withOpacity(0.3)),
+            top: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+            bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
           ),
         ),
         child: Center(

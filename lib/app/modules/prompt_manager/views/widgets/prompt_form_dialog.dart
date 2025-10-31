@@ -10,10 +10,10 @@ class PromptFormDialog extends StatelessWidget {
   final bool isEditing;
 
   const PromptFormDialog({
-    Key? key,
+    super.key,
     required this.controller,
     this.isEditing = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +38,7 @@ class PromptFormDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    isEditing ? Iconsax.edit : Iconsax.add,
-                    size: 24.r,
-                  ),
+                  Icon(isEditing ? Iconsax.edit : Iconsax.add, size: 24.r),
                   SizedBox(width: 12.w),
                   Expanded(
                     child: Text(
@@ -59,7 +56,7 @@ class PromptFormDialog extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Form
             Expanded(
               child: SingleChildScrollView(
@@ -89,9 +86,9 @@ class PromptFormDialog extends StatelessWidget {
                           prefixIcon: const Icon(Iconsax.text),
                         ),
                       ),
-                      
+
                       SizedBox(height: 16.h),
-                      
+
                       // Category field
                       Text(
                         'Danh mục *',
@@ -112,9 +109,9 @@ class PromptFormDialog extends StatelessWidget {
                           prefixIcon: const Icon(Iconsax.category),
                         ),
                       ),
-                      
+
                       SizedBox(height: 16.h),
-                      
+
                       // Description field
                       Text(
                         'Mô tả',
@@ -135,9 +132,9 @@ class PromptFormDialog extends StatelessWidget {
                           prefixIcon: const Icon(Iconsax.note),
                         ),
                       ),
-                      
+
                       SizedBox(height: 16.h),
-                      
+
                       // Content field
                       Text(
                         'Nội dung Prompt *',
@@ -152,7 +149,8 @@ class PromptFormDialog extends StatelessWidget {
                         validator: controller.validateContent,
                         maxLines: 10,
                         decoration: InputDecoration(
-                          hintText: 'Nhập nội dung prompt...\n\nVí dụ:\nHãy tạo file phụ đề SRT cho video YouTube này...',
+                          hintText:
+                              'Nhập nội dung prompt...\n\nVí dụ:\nHãy tạo file phụ đề SRT cho video YouTube này...',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
                           ),
@@ -163,14 +161,17 @@ class PromptFormDialog extends StatelessWidget {
                           fontSize: 13.sp,
                         ),
                       ),
-                      
+
                       SizedBox(height: 16.h),
-                      
+
                       // Tips
                       Container(
                         padding: EdgeInsets.all(12.w),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Column(
@@ -189,7 +190,9 @@ class PromptFormDialog extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 12.sp,
                                     fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 ),
                               ],
@@ -213,14 +216,16 @@ class PromptFormDialog extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Actions
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -235,20 +240,22 @@ class PromptFormDialog extends StatelessWidget {
                   SizedBox(width: 12.w),
                   Expanded(
                     flex: 2,
-                    child: Obx(() => ElevatedButton(
-                      onPressed: controller.isLoading.value
-                          ? null
-                          : controller.savePrompt,
-                      child: controller.isLoading.value
-                          ? SizedBox(
-                              height: 20.h,
-                              width: 20.w,
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(isEditing ? 'Cập nhật' : 'Thêm'),
-                    )),
+                    child: Obx(
+                      () => ElevatedButton(
+                        onPressed: controller.isLoading.value
+                            ? null
+                            : controller.savePrompt,
+                        child: controller.isLoading.value
+                            ? SizedBox(
+                                height: 20.h,
+                                width: 20.w,
+                                child: const CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(isEditing ? 'Cập nhật' : 'Thêm'),
+                      ),
+                    ),
                   ),
                 ],
               ),

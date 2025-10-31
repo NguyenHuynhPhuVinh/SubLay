@@ -34,7 +34,7 @@ class AppSettingsController extends GetxController {
           'Lỗi',
           'Giây không được vượt quá 59',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.8),
+          backgroundColor: Colors.red.withValues(alpha: 0.8),
           colorText: Colors.white,
         );
         return;
@@ -48,7 +48,7 @@ class AppSettingsController extends GetxController {
         'Lỗi',
         'Vui lòng nhập số hợp lệ',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     }
@@ -71,7 +71,7 @@ class AppSettingsController extends GetxController {
         'Lỗi',
         'Vui lòng nhập số hợp lệ',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     }
@@ -85,16 +85,6 @@ class AppSettingsController extends GetxController {
     convertedSeconds.value = 0;
     convertedMinutes.value = 0;
     convertedSecondsRemainder.value = 0;
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
   }
 
   @override

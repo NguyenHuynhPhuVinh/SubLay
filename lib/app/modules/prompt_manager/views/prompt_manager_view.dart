@@ -7,10 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../controllers/prompt_manager_controller.dart';
 import '../../../data/models/prompt_model.dart';
 import 'widgets/prompt_card.dart';
-import 'widgets/prompt_form_dialog.dart';
 
 class PromptManagerView extends GetView<PromptManagerController> {
-  const PromptManagerView({Key? key}) : super(key: key);
+  const PromptManagerView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -366,20 +365,6 @@ class PromptManagerView extends GetView<PromptManagerController> {
           ),
         ),
       ],
-    );
-  }
-
-  void _showPromptForm(BuildContext context, {PromptModel? prompt}) {
-    if (prompt != null) {
-      controller.editPrompt(prompt);
-    } else {
-      controller.clearForm();
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) =>
-          PromptFormDialog(controller: controller, isEditing: prompt != null),
     );
   }
 

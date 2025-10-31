@@ -12,13 +12,13 @@ class PromptCard extends StatelessWidget {
   final VoidCallback? onCopy;
 
   const PromptCard({
-    Key? key,
+    super.key,
     required this.prompt,
     this.onTap,
     this.onEdit,
     this.onDelete,
     this.onCopy,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +64,8 @@ class PromptCard extends StatelessWidget {
                                   vertical: 2.h,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withOpacity(
-                                    0.1,
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.1,
                                   ),
                                   borderRadius: BorderRadius.circular(4.r),
                                 ),
@@ -125,15 +125,12 @@ class PromptCard extends StatelessWidget {
                       switch (value) {
                         case 'copy':
                           onCopy?.call();
-                          break;
                         case 'edit':
                           onEdit?.call();
-                          break;
                         case 'delete':
                           if (!prompt.isDefault) {
                             onDelete?.call();
                           }
-                          break;
                       }
                     },
                     itemBuilder: (context) => [
@@ -192,7 +189,7 @@ class PromptCard extends StatelessWidget {
                   color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(
-                    color: theme.colorScheme.outline.withOpacity(0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Text(

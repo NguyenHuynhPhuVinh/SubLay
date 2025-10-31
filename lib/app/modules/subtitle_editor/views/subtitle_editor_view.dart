@@ -7,7 +7,7 @@ import '../controllers/subtitle_editor_controller.dart';
 import '../../../core/services/subtitle_settings_service.dart';
 
 class SubtitleEditorView extends GetView<SubtitleEditorController> {
-  const SubtitleEditorView({Key? key}) : super(key: key);
+  const SubtitleEditorView({super.key});
 
   SubtitleSettingsService get _subtitleSettings =>
       Get.find<SubtitleSettingsService>();
@@ -169,7 +169,7 @@ class SubtitleEditorView extends GetView<SubtitleEditorController> {
   Widget _buildStatusInfo() {
     return Obx(
       () => Card(
-        color: Colors.blue.withOpacity(0.1),
+        color: Colors.blue.withValues(alpha: 0.1),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(

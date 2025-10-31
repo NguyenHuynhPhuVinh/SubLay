@@ -12,7 +12,7 @@ import '../../prompt_manager/views/prompt_manager_view.dart';
 import '../../app_settings/views/app_settings_view.dart';
 
 class MainScreenView extends GetView<MainScreenController> {
-  const MainScreenView({Key? key}) : super(key: key);
+  const MainScreenView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +53,8 @@ class MainScreenView extends GetView<MainScreenController> {
           BoxShadow(
             blurRadius: 20.r,
             color: isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.1),
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.1),
           ),
         ],
       ),
@@ -87,8 +87,8 @@ class MainScreenView extends GetView<MainScreenController> {
           BoxShadow(
             blurRadius: 20.r,
             color: isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.1),
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.1),
           ),
         ],
       ),
@@ -159,7 +159,7 @@ class MainScreenView extends GetView<MainScreenController> {
           ),
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary.withOpacity(0.1)
+                ? theme.colorScheme.primary.withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8.r),
           ),
@@ -172,7 +172,7 @@ class MainScreenView extends GetView<MainScreenController> {
                 size: isMobile ? 18.r : 20.r,
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.6),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               SizedBox(height: 2.h),
               Flexible(
@@ -182,7 +182,7 @@ class MainScreenView extends GetView<MainScreenController> {
                     fontSize: isMobile ? 9.sp : 10.sp,
                     color: isSelected
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   ),
                   textAlign: TextAlign.center,
