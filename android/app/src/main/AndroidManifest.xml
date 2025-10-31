@@ -1,5 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tomisakae.sublay">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Internet permission for YouTube videos -->
     <uses-permission android:name="android.permission.INTERNET" />
