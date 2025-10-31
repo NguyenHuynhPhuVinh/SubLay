@@ -1,4 +1,4 @@
-package com.tomisakae.dutupsrt
+package com.tomisakae.sublay
 
 import io.flutter.embedding.android.FlutterActivity
 

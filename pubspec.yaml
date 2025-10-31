@@ -1,5 +1,5 @@
-name: dutup_srt
-description: "Ứng dụng xem video YouTube với phụ đề SRT tùy chỉnh - DuTupSRT"
+name: sublay
+description: "Ứng dụng xem video YouTube với phụ đề SRT tùy chỉnh - SubLay"
 publish_to: "none"
 version: 1.0.0+1
 
