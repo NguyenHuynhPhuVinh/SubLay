@@ -17,36 +17,36 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const initial = Routes.MAIN_SCREEN;
+  static const initial = Routes.mainScreen;
 
   static final routes = [
     GetPage(
-      name: _Paths.MAIN_SCREEN,
+      name: _Paths.mainScreen,
       page: () => const MainScreenView(),
       binding: MainScreenBinding(),
     ),
     GetPage(
-      name: _Paths.VIDEO_INPUT,
+      name: _Paths.videoInput,
       page: () => const VideoInputView(),
       binding: VideoInputBinding(),
     ),
     GetPage(
-      name: _Paths.VIDEO_PLAYER,
+      name: _Paths.videoPlayer,
       page: () => const VideoPlayerView(),
       binding: VideoPlayerBinding(),
     ),
     GetPage(
-      name: _Paths.SUBTITLE_EDITOR,
+      name: _Paths.subtitleEditor,
       page: () => const SubtitleEditorView(),
       binding: SubtitleEditorBinding(),
     ),
     GetPage(
-      name: _Paths.PROMPT_MANAGER,
+      name: _Paths.promptManager,
       page: () => const PromptManagerView(),
       binding: PromptManagerBinding(),
     ),
     GetPage(
-      name: _Paths.APP_SETTINGS,
+      name: _Paths.appSettings,
       page: () => const AppSettingsView(),
       binding: AppSettingsBinding(),
     ),

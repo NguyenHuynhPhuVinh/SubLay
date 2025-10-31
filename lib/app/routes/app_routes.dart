@@ -1,22 +1,21 @@
 part of 'app_pages.dart';
-// DO NOT EDIT. This is code generated via package:get_cli/get_cli.dart
 
 abstract class Routes {
   Routes._();
-  static const MAIN_SCREEN = _Paths.MAIN_SCREEN;
-  static const VIDEO_INPUT = _Paths.VIDEO_INPUT;
-  static const VIDEO_PLAYER = _Paths.VIDEO_PLAYER;
-  static const SUBTITLE_EDITOR = _Paths.SUBTITLE_EDITOR;
-  static const PROMPT_MANAGER = _Paths.PROMPT_MANAGER;
-  static const APP_SETTINGS = _Paths.APP_SETTINGS;
+  static const mainScreen = _Paths.mainScreen;
+  static const videoInput = _Paths.videoInput;
+  static const videoPlayer = _Paths.videoPlayer;
+  static const subtitleEditor = _Paths.subtitleEditor;
+  static const promptManager = _Paths.promptManager;
+  static const appSettings = _Paths.appSettings;
 }
 
 abstract class _Paths {
   _Paths._();
-  static const MAIN_SCREEN = '/main_screen';
-  static const VIDEO_INPUT = '/video_input';
-  static const VIDEO_PLAYER = '/video_player';
-  static const SUBTITLE_EDITOR = '/subtitle_editor';
-  static const PROMPT_MANAGER = '/prompt_manager';
-  static const APP_SETTINGS = '/app_settings';
+  static const mainScreen = '/main_screen';
+  static const videoInput = '/video_input';
+  static const videoPlayer = '/video_player';
+  static const subtitleEditor = '/subtitle_editor';
+  static const promptManager = '/prompt_manager';
+  static const appSettings = '/app_settings';
 }
