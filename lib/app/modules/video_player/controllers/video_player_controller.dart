@@ -19,6 +19,7 @@ class VideoPlayerController extends GetxController {
   // YouTube Player Controller
   late YoutubePlayerController youtubeController;
   Timer? _controlsTimer; // Timer for auto-hiding controls
+  Timer? _qualityTimer; // Timer để ép chất lượng HD định kỳ
 
   // Observable variables
   final isPlayerReady = false.obs;
@@ -79,6 +80,7 @@ class VideoPlayerController extends GetxController {
             enableCaption: false,
             loop: false,
             hideControls: false,
+            forceHD: true, // Vẫn giữ để yêu cầu HD ban đầu
           ),
         );
         youtubeController.addListener(_playerListener);
@@ -96,6 +98,12 @@ class VideoPlayerController extends GetxController {
 
   void _playerListener() {
     final value = youtubeController.value;
+
+    // Bắt đầu timer ép chất lượng HD khi trình phát đã sẵn sàng
+    if (value.isReady && _qualityTimer == null) {
+      _startQualityTimer();
+    }
+
     currentPosition.value = value.position;
     totalDuration.value = value.metaData.duration;
     isPlaying.value = value.isPlaying;
@@ -104,6 +112,26 @@ class VideoPlayerController extends GetxController {
       _handlePlayerError(value.errorCode);
     }
     _updateCurrentSubtitle();
+  }
+
+  void _startQualityTimer() {
+    _qualityTimer?.cancel();
+    // Chạy ngay lần đầu
+    _setVideoQuality();
+    // Sau đó chạy định kỳ mỗi 1 giây
+    _qualityTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _setVideoQuality();
+    });
+  }
+
+  void _setVideoQuality() {
+    try {
+      youtubeController.value.webViewController?.evaluateJavascript(
+        source: 'player.setPlaybackQuality("hd720")',
+      );
+    } catch (e) {
+      // Silent fail nếu không thể set quality
+    }
   }
 
   void _handlePlayerError(int errorCode) {
@@ -367,6 +395,8 @@ class VideoPlayerController extends GetxController {
     ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _controlsTimer?.cancel();
+    _qualityTimer?.cancel();
+    youtubeController.removeListener(_playerListener);
     youtubeController.dispose();
     super.onClose();
   }
