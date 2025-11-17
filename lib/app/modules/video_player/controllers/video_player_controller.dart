@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/utils/srt_parser.dart';
@@ -17,9 +17,8 @@ class VideoPlayerController extends GetxController {
       Get.find<SubtitleSettingsService>();
 
   // YouTube Player Controller
-  YoutubePlayerController? youtubeController;
+  late YoutubePlayerController youtubeController;
   Timer? _controlsTimer; // Timer for auto-hiding controls
-  Timer? _positionTimer; // Timer for position updates
 
   // Observable variables
   final isPlayerReady = false.obs;
@@ -73,31 +72,16 @@ class VideoPlayerController extends GetxController {
     if (videoId.value.isNotEmpty) {
       try {
         youtubeController = YoutubePlayerController(
-          params: const YoutubePlayerParams(
+          initialVideoId: videoId.value,
+          flags: const YoutubePlayerFlags(
             mute: false,
+            autoPlay: true,
             enableCaption: false,
-            enableJavaScript: true,
             loop: false,
-            playsInline: true,
-            showControls: true,
-            showFullscreenButton: false,
-            strictRelatedVideos: false,
+            hideControls: false,
           ),
         );
-
-        // Load video after controller initialization
-        _loadVideoDelayed();
-
-        // Add listener for player state changes and errors
-        youtubeController!.listen((event) {
-          // Check if there's an error in the player state
-          if (event.hasError) {
-            _handlePlayerError(null);
-          }
-        });
-
-        // Start position timer for iframe player
-        _startPositionTimer();
+        youtubeController.addListener(_playerListener);
       } catch (e) {
         Get.snackbar(
           'Lỗi',
@@ -110,54 +94,30 @@ class VideoPlayerController extends GetxController {
     }
   }
 
-  void _loadVideoDelayed() {
-    // Load video after a delay to ensure controller is fully initialized
-    Future.delayed(const Duration(milliseconds: 500), () async {
-      try {
-        if (youtubeController != null && videoId.value.isNotEmpty) {
-          await youtubeController!.loadVideoById(videoId: videoId.value);
-          // Auto-play after loading
-          Future.delayed(const Duration(milliseconds: 300), () async {
-            try {
-              await youtubeController!.playVideo();
-            } catch (e) {
-              // Silent fail for auto-play
-            }
-          });
-        }
-      } catch (e) {
-        // If loading fails, try alternative approach
-        _tryAlternativeLoad();
-      }
-    });
+  void _playerListener() {
+    final value = youtubeController.value;
+    currentPosition.value = value.position;
+    totalDuration.value = value.metaData.duration;
+    isPlaying.value = value.isPlaying;
+    isPlayerReady.value = value.isReady;
+    if (value.hasError) {
+      _handlePlayerError(value.errorCode);
+    }
+    _updateCurrentSubtitle();
   }
 
-  void _tryAlternativeLoad() {
-    // Alternative loading method for problematic video IDs
-    Future.delayed(const Duration(milliseconds: 1000), () async {
-      try {
-        if (youtubeController != null) {
-          // Try reloading with the same video ID but different timing
-          await youtubeController!.loadVideoById(videoId: videoId.value);
-        }
-      } catch (e) {
-        // Silent fail for alternative load
-      }
-    });
-  }
-
-  void _handlePlayerError(String? errorCode) {
+  void _handlePlayerError(int errorCode) {
     String errorMessage = 'Lỗi không xác định';
 
     switch (errorCode) {
-      case '2':
+      case 1:
         errorMessage = 'Video ID không hợp lệ';
-      case '5':
+      case 5:
         errorMessage = 'Video không hỗ trợ phát trên HTML5 player';
-      case '100':
+      case 100:
         errorMessage = 'Video không tìm thấy hoặc đã bị xóa';
-      case '101':
-      case '150':
+      case 101:
+      case 150:
         errorMessage = 'Video bị hạn chế hoặc không khả dụng ở khu vực của bạn';
       default:
         errorMessage = 'Không thể phát video (Mã lỗi: $errorCode)';
@@ -171,41 +131,6 @@ class VideoPlayerController extends GetxController {
       colorText: Colors.white,
       duration: const Duration(seconds: 5),
     );
-  }
-
-  void _startPositionTimer() {
-    _positionTimer?.cancel();
-    // Giảm interval xuống 100ms để phụ đề responsive hơn
-    _positionTimer = Timer.periodic(const Duration(milliseconds: 100), (
-      timer,
-    ) async {
-      if (youtubeController != null) {
-        try {
-          final position = await youtubeController!.currentTime;
-
-          // Giữ độ chính xác millisecond cho phụ đề
-          final precisePosition = Duration(
-            milliseconds: (position * 1000).toInt(),
-          );
-          currentPosition.value = precisePosition;
-
-          // Chỉ cập nhật duration và player state mỗi 500ms để tối ưu performance
-          if (timer.tick % 5 == 0) {
-            final duration = await youtubeController!.duration;
-            final playerState = await youtubeController!.playerState;
-
-            totalDuration.value = Duration(seconds: duration.toInt());
-            isPlaying.value = playerState == PlayerState.playing;
-            isPlayerReady.value = playerState != PlayerState.unknown;
-          }
-
-          // Update subtitle based on current position với độ chính xác cao
-          _updateCurrentSubtitle();
-        } catch (e) {
-          // Silent error handling for position updates
-        }
-      }
-    });
   }
 
   void _parseSrtContent() {
@@ -262,66 +187,49 @@ class VideoPlayerController extends GetxController {
   }
 
   void togglePlayPause() async {
-    if (youtubeController != null) {
-      try {
-        if (isPlaying.value) {
-          await youtubeController!.pauseVideo();
-        } else {
-          // Khi play lại từ trạng thái pause, trừ 5s
-          final currentSeconds = currentPosition.value.inSeconds;
-          final rewindSeconds = currentSeconds < 5 ? 0 : currentSeconds - 5;
-          final rewindPosition = Duration(seconds: rewindSeconds);
+    try {
+      if (youtubeController.value.isPlaying) {
+        youtubeController.pause();
+      } else {
+        // Khi play lại từ trạng thái pause, trừ 5s
+        final currentSeconds = currentPosition.value.inSeconds;
+        final rewindSeconds = currentSeconds < 5 ? 0 : currentSeconds - 5;
+        final rewindPosition = Duration(seconds: rewindSeconds);
 
-          if (rewindPosition != currentPosition.value) {
-            await youtubeController!.seekTo(
-              seconds: rewindPosition.inSeconds.toDouble(),
-            );
-            // Rewound 5s before play
-          }
-
-          await youtubeController!.playVideo();
-        }
-
-        // Reset controls timer when user interacts
-        _resetControlsTimer();
-      } catch (e) {
-        // Silent error handling
+        seekTo(rewindPosition);
+        youtubeController.play();
       }
+
+      // Reset controls timer when user interacts
+      _resetControlsTimer();
+    } catch (e) {
+      // Silent error handling
     }
   }
 
   // Seek to specific position
   void seekTo(Duration position) async {
-    if (youtubeController != null) {
-      try {
-        await youtubeController!.seekTo(seconds: position.inSeconds.toDouble());
-        // Reset controls timer when user interacts
-        _resetControlsTimer();
-      } catch (e) {
-        // Silent error handling
-      }
+    try {
+      youtubeController.seekTo(position);
+      // Reset controls timer when user interacts
+      _resetControlsTimer();
+    } catch (e) {
+      // Silent error handling
     }
   }
 
   // Seek relative to current position
   void seekRelative(int seconds) async {
-    if (youtubeController != null) {
-      try {
-        final newPosition = currentPosition.value + Duration(seconds: seconds);
-        final clampedPosition = Duration(
-          seconds: newPosition.inSeconds.clamp(
-            0,
-            totalDuration.value.inSeconds,
-          ),
-        );
-        await youtubeController!.seekTo(
-          seconds: clampedPosition.inSeconds.toDouble(),
-        );
-        // Reset controls timer when user interacts
-        _resetControlsTimer();
-      } catch (e) {
-        // Silent error handling
-      }
+    try {
+      final newPosition = currentPosition.value + Duration(seconds: seconds);
+      final clampedPosition = Duration(
+        seconds: newPosition.inSeconds.clamp(0, totalDuration.value.inSeconds),
+      );
+      youtubeController.seekTo(clampedPosition);
+      // Reset controls timer when user interacts
+      _resetControlsTimer();
+    } catch (e) {
+      // Silent error handling
     }
   }
 
@@ -435,7 +343,7 @@ class VideoPlayerController extends GetxController {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     // Clear video data
-    youtubeController?.pauseVideo();
+    youtubeController.pause();
 
     // Use Navigator.pop instead of Get.back to avoid GetX SnackbarController error
     try {
@@ -458,9 +366,8 @@ class VideoPlayerController extends GetxController {
       DeviceOrientation.portraitDown,
     ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    _positionTimer?.cancel();
     _controlsTimer?.cancel();
-    youtubeController?.close();
+    youtubeController.dispose();
     super.onClose();
   }
 }

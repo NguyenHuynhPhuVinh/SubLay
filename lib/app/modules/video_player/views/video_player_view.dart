@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -13,9 +13,7 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
   Widget build(BuildContext context) {
     return GetBuilder<VideoPlayerController>(
       builder: (controller) {
-        // Check if controller has video data
-        if (controller.youtubeController == null ||
-            controller.videoId.value.isEmpty) {
+        if (controller.videoId.value.isEmpty) {
           return _buildNoVideoScreen();
         }
 
@@ -90,11 +88,9 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
               height: 250,
               child: _buildVideoPlayer(),
             ),
-            // Subtitle display
             _buildSubtitleDisplay(),
-            // Video controls
-            _buildVideoControls(),
-            const Spacer(),
+            const Spacer(), // Pushes controls to the bottom if any were here
+            // Custom controls are removed, using player's built-in controls.
           ],
         ),
       ),
@@ -131,8 +127,15 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
 
   Widget _buildVideoPlayer() {
     return YoutubePlayer(
-      controller: controller.youtubeController!,
+      controller: controller.youtubeController,
       aspectRatio: 16 / 9, // Standard video aspect ratio
+      bottomActions: [
+        CurrentPosition(),
+        const SizedBox(width: 8.0),
+        ProgressBar(isExpanded: true),
+        RemainingDuration(),
+        PlaybackSpeedButton(),
+      ],
     );
   }
 
@@ -213,14 +216,6 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
     }
   }
 
-  // Format duration to mm:ss
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
-
   Widget _buildSubtitleDisplay() {
     return Obx(
       () => Container(
@@ -258,86 +253,6 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
             wrapWords: true, // Quan trọng: cho phép wrap words thông minh
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildVideoControls() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Progress bar
-          Obx(
-            () => Slider(
-              value: controller.currentPosition.value.inSeconds.toDouble(),
-              max: controller.totalDuration.value.inSeconds.toDouble(),
-              onChanged: (value) {
-                controller.seekTo(Duration(seconds: value.toInt()));
-              },
-              activeColor: Colors.red,
-              inactiveColor: Colors.grey[300],
-            ),
-          ),
-
-          // Time display
-          Obx(
-            () => Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _formatDuration(controller.currentPosition.value),
-                  style: const TextStyle(fontSize: 12),
-                ),
-                Text(
-                  _formatDuration(controller.totalDuration.value),
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Control buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                onPressed: () {
-                  final newPosition =
-                      controller.currentPosition.value -
-                      const Duration(seconds: 10);
-                  controller.seekTo(newPosition);
-                },
-                icon: const Icon(Iconsax.backward_10_seconds),
-                iconSize: 32,
-              ),
-
-              Obx(
-                () => IconButton(
-                  onPressed: controller.togglePlayPause,
-                  icon: Icon(
-                    controller.isPlaying.value ? Iconsax.pause : Iconsax.play,
-                  ),
-                  iconSize: 40,
-                  color: Colors.red,
-                ),
-              ),
-
-              IconButton(
-                onPressed: () {
-                  final newPosition =
-                      controller.currentPosition.value +
-                      const Duration(seconds: 10);
-                  controller.seekTo(newPosition);
-                },
-                icon: const Icon(Iconsax.forward_10_seconds),
-                iconSize: 32,
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
