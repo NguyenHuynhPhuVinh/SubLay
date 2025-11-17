@@ -42,6 +42,7 @@ dependencies:
   # Video & YouTube
   youtube_player_iframe: 5.2.1
   video_player: ^2.8.6
+  webview_flutter: ^4.10.0
 
   # File & SRT Processing
   file_picker: ^8.0.6

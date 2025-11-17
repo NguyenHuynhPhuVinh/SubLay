@@ -5,7 +5,13 @@ class MainScreenController extends GetxController {
   final currentIndex = 0.obs;
 
   // Danh sách các tab cho DuTupSRT
-  final List<String> tabTitles = ['Videos', 'Editor', 'Prompts', 'Settings'];
+  final List<String> tabTitles = [
+    'Videos',
+    'Editor',
+    'Prompts',
+    'YouTube',
+    'Settings',
+  ];
 
   // Thay đổi tab
   void changeTabIndex(int index) {

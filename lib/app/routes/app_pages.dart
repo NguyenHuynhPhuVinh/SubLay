@@ -11,6 +11,8 @@ import '../modules/prompt_manager/bindings/prompt_manager_binding.dart';
 import '../modules/prompt_manager/views/prompt_manager_view.dart';
 import '../modules/app_settings/bindings/app_settings_binding.dart';
 import '../modules/app_settings/views/app_settings_view.dart';
+import '../modules/youtube_browser/bindings/youtube_browser_binding.dart';
+import '../modules/youtube_browser/views/youtube_browser_view.dart';
 
 part 'app_routes.dart';
 
@@ -49,6 +51,11 @@ class AppPages {
       name: _Paths.appSettings,
       page: () => const AppSettingsView(),
       binding: AppSettingsBinding(),
+    ),
+    GetPage(
+      name: _Paths.youtubeBrowser,
+      page: () => const YoutubeBrowserView(),
+      binding: YoutubeBrowserBinding(),
     ),
   ];
 }

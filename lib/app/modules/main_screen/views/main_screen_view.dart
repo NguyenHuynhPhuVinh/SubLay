@@ -9,6 +9,7 @@ import '../controllers/main_screen_controller.dart';
 import '../../video_input/views/video_input_view.dart';
 import '../../subtitle_editor/views/subtitle_editor_view.dart';
 import '../../prompt_manager/views/prompt_manager_view.dart';
+import '../../youtube_browser/views/youtube_browser_view.dart';
 import '../../app_settings/views/app_settings_view.dart';
 
 class MainScreenView extends GetView<MainScreenController> {
@@ -24,7 +25,8 @@ class MainScreenView extends GetView<MainScreenController> {
             VideoInputView(), // Tab 0
             SubtitleEditorView(), // Tab 1
             PromptManagerView(), // Tab 2
-            AppSettingsView(), // Tab 3
+            YoutubeBrowserView(), // Tab 3
+            AppSettingsView(), // Tab 4
           ],
         ),
       ),
@@ -69,7 +71,8 @@ class MainScreenView extends GetView<MainScreenController> {
                 _buildNavItem(0, Iconsax.video, 'Videos', true),
                 _buildNavItem(1, Iconsax.edit, 'Editor', true),
                 _buildNavItem(2, Iconsax.message_text, 'Prompts', true),
-                _buildNavItem(3, Iconsax.setting_2, 'Settings', true),
+                _buildNavItem(3, Iconsax.play_circle, 'YouTube', true),
+                _buildNavItem(4, Iconsax.setting_2, 'Settings', true),
               ],
             ),
           ),
@@ -124,6 +127,11 @@ class MainScreenView extends GetView<MainScreenController> {
                 GButton(
                   icon: Iconsax.message_text,
                   text: 'Prompts',
+                  textStyle: TextStyle(fontSize: 12.sp),
+                ),
+                GButton(
+                  icon: Iconsax.play_circle,
+                  text: 'YouTube',
                   textStyle: TextStyle(fontSize: 12.sp),
                 ),
                 GButton(

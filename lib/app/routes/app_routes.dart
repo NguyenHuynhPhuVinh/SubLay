@@ -8,6 +8,7 @@ abstract class Routes {
   static const subtitleEditor = _Paths.subtitleEditor;
   static const promptManager = _Paths.promptManager;
   static const appSettings = _Paths.appSettings;
+  static const youtubeBrowser = _Paths.youtubeBrowser;
 }
 
 abstract class _Paths {
@@ -18,4 +19,5 @@ abstract class _Paths {
   static const subtitleEditor = '/subtitle_editor';
   static const promptManager = '/prompt_manager';
   static const appSettings = '/app_settings';
+  static const youtubeBrowser = '/youtube_browser';
 }
