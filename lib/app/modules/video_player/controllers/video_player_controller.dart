@@ -45,14 +45,26 @@ class VideoPlayerController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // Set fullscreen mode and orientation based on user settings
-    _setFullScreenModeFromSettings();
-
-    // Hide system UI for fullscreen mode
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-
     // Get arguments from navigation
     final args = Get.arguments as Map<String, dynamic>?;
+
+    // Check if opened from browser
+    final fromBrowser = args?['fromBrowser'] == true;
+
+    if (fromBrowser) {
+      // Force fullscreen landscape mode when from browser
+      isFullScreen.value = true;
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    } else {
+      // Set fullscreen mode and orientation based on user settings
+      _setFullScreenModeFromSettings();
+      // Hide system UI for fullscreen mode
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    }
 
     if (args != null) {
       videoId.value = args['videoId'] ?? '';
@@ -433,6 +445,9 @@ class VideoPlayerController extends GetxController {
       DeviceOrientation.portraitDown,
     ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+    // Reset fullscreen state
+    isFullScreen.value = false;
 
     // Clear video data
     youtubeController?.pauseVideo();
